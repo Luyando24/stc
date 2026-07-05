@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Clock,
   CheckCircle2,
+  CheckCircle,
   AlertTriangle,
   MapPin,
   ClipboardList,
@@ -74,11 +75,36 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(5);
 
+  // Fetch ALL parcels of this user for accurate counts
+  const { data: allParcels } = await supabase
+    .from("parcels")
+    .select("status")
+    .eq("customer_id", user.id);
+
+  // Fetch ALL shipments of this user for accurate counts
+  const { data: allShipments } = await supabase
+    .from("shipments")
+    .select("id, status")
+    .eq("customer_id", user.id);
+
   const parcelCounts = {
-    pending: parcels?.filter((p) => p.status === "pending").length ?? 0,
-    arrived: parcels?.filter((p) => p.status === "arrived").length ?? 0,
-    consolidated: parcels?.filter((p) => p.status === "consolidated").length ?? 0,
+    pending: allParcels?.filter((p) => p.status === "pending").length ?? 0,
+    arrived: allParcels?.filter((p) => p.status === "arrived").length ?? 0,
   };
+
+  const activeOrdersCount = allShipments?.filter(
+    (s) => s.status !== "delivered" && s.status !== "cancelled"
+  ).length ?? 0;
+
+  const deliveredShipmentIds = allShipments?.filter((s) => s.status === "delivered").map((s) => s.id) ?? [];
+  let deliveredParcelsCount = 0;
+  if (deliveredShipmentIds.length > 0) {
+    const { count } = await supabase
+      .from("shipment_parcels")
+      .select("parcel_id", { count: "exact", head: true })
+      .in("shipment_id", deliveredShipmentIds);
+    deliveredParcelsCount = count ?? 0;
+  }
 
   return (
     <div className="space-y-8">
@@ -108,7 +134,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
             label: "Pending Parcels",
@@ -126,10 +152,17 @@ export default async function DashboardPage() {
           },
           {
             label: "Active Orders",
-            value: shipments?.filter((s) => s.status !== "delivered" && s.status !== "cancelled").length ?? 0,
+            value: activeOrdersCount,
             icon: ClipboardList,
             color: "text-brand-600",
             href: "/dashboard/shipments",
+          },
+          {
+            label: "Delivered",
+            value: deliveredParcelsCount,
+            icon: CheckCircle,
+            color: "text-emerald-600",
+            href: "/dashboard/delivered",
           },
         ].map((stat) => (
           <Link
