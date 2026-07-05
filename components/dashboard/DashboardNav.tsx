@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Plus,
+  MapPin,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Profile } from "@/lib/types";
@@ -21,6 +22,7 @@ import clsx from "clsx";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/address", label: "Warehouse Address", icon: MapPin },
   { href: "/dashboard/parcels", label: "My Parcels", icon: Package },
   { href: "/dashboard/shipments", label: "My Shipments", icon: Plane },
 ];
@@ -205,14 +207,17 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
             <span className="text-[10px] font-medium">Shipments</span>
           </Link>
 
-          {/* Profile / Menu toggle */}
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="flex flex-col items-center gap-1 p-1.5 text-slate-500 hover:text-slate-955"
+          {/* Address */}
+          <Link
+            href="/dashboard/address"
+            className={clsx(
+              "flex flex-col items-center gap-1 p-1.5 transition-colors",
+              pathname.startsWith("/dashboard/address") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+            )}
           >
-            <Settings className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Menu</span>
-          </button>
+            <MapPin className="w-5 h-5" />
+            <span className="text-[10px] font-medium font-sans">Address</span>
+          </Link>
         </div>
       </div>
 

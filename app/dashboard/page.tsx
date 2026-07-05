@@ -8,9 +8,9 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
+  MapPin,
 } from "lucide-react";
 import { ParcelStatus, ShipmentStatus } from "@/lib/types";
-import { CopyButton } from "@/components/CopyButton";
 
 function StatusIcon({ status }: { status: ParcelStatus | ShipmentStatus }) {
   switch (status) {
@@ -81,58 +81,28 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome & Warehouse Code */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
-        <h1 className="text-3xl font-extrabold text-slate-100">
-          Welcome back, {profile?.full_name || "Customer"}!
-        </h1>
-        <p className="text-slate-400 mt-2 max-w-xl">
-          Use the details below to ship your items to our China warehouse, and then pre-alert them.
-        </p>
-
-        <div className="mt-6 bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-          <div className="flex-1 space-y-4">
-            <div>
-              <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">
-                Your China Warehouse Delivery Code
-              </p>
-              <p className="text-2xl font-bold text-slate-100 font-mono tracking-wider mt-1">
-                {profile?.warehouse_code ?? "XXXX"}
-              </p>
-            </div>
-
-            <div className="border-t border-slate-700/50 pt-4 grid sm:grid-cols-2 gap-4">
-              <div>
-                <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">
-                  China Warehouse Address
-                </p>
-                <p className="text-slate-200 mt-1 font-medium text-sm leading-relaxed">
-                  广州市越秀区环市西路202号之三美博运动城902 <span className="text-brand-400 font-mono font-bold">({profile?.warehouse_code ?? "XXXX"})</span>
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">
-                  Warehouse Phone
-                </p>
-                <p className="text-slate-200 mt-1 font-mono text-sm">
-                  +86 13434313227
-                </p>
-              </div>
-            </div>
-            <p className="text-xs text-slate-450 italic">
-              * Make sure your delivery code ({profile?.warehouse_code ?? "XXXX"}) is included in the shipping address or receiver name so we can identify your parcel.
+      {/* Welcome & Warehouse Code Promo */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-sm">
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-extrabold text-slate-100">
+              Welcome back, {profile?.full_name || "Customer"}!
+            </h1>
+            <p className="text-slate-400 text-sm max-w-xl leading-relaxed">
+              Your unique warehouse delivery code is <span className="font-mono text-brand-400 font-bold">{profile?.warehouse_code ?? "XXXX"}</span>. Use this code to ship packages to our warehouse in China.
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row lg:flex-col shrink-0">
-            <CopyButton
-              text={`${profile?.warehouse_code ?? ""}`}
-              label="Copy Code"
-            />
-            <CopyButton
-              text={`Address: 广州市越秀区环市西路202号之三美博运动城902 (${profile?.warehouse_code ?? ""})\nPhone: +86 13434313227\nConsignee: STC / ${profile?.warehouse_code ?? ""}`}
-              label="Copy Address Details"
-            />
-          </div>
+          <Link
+            href="/dashboard/address"
+            className="btn-primary py-2.5 px-5 shrink-0 flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-medium text-sm transition-all"
+          >
+            <MapPin className="w-4 h-4" />
+            Get Warehouse Address
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
 
