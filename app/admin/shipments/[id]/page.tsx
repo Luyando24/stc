@@ -1,0 +1,125 @@
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Plane, Ship, MapPin } from "lucide-react";
+import TrackingTimeline from "@/components/tracking/TrackingTimeline";
+import AdminMilestoneForm from "@/components/admin/AdminMilestoneForm";
+import AdminShipmentStatusForm from "@/components/admin/AdminShipmentStatusForm";
+
+export default async function AdminShipmentDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const { data: shipment } = await supabase
+    .from("shipments")
+    .select("*, profiles(full_name, warehouse_code)")
+    .eq("id", id)
+    .single();
+
+  if (!shipment) notFound();
+
+  const { data: events } = await supabase
+    .from("tracking_events")
+    .select("*")
+    .eq("shipment_id", id)
+    .order("event_datetime", { ascending: false });
+
+  const { data: parcelLinks } = await supabase
+    .from("shipment_parcels")
+    .select("parcel_id, parcels(*)")
+    .eq("shipment_id", id);
+
+  return (
+    <div className="max-w-2xl">
+      <Link href="/admin/shipments" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white mb-6 transition-colors">
+        <ArrowLeft className="w-4 h-4" /> Back to shipments
+      </Link>
+
+      {/* Header */}
+      <div className="card p-6 mb-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
+          <div>
+            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">STC Tracking</p>
+            <p className="text-2xl font-mono font-bold text-white">{shipment.stc_tracking_number}</p>
+            <p className="text-sm text-slate-400 mt-1">
+              Customer: <span className="text-white">{(shipment.profiles as { full_name: string })?.full_name}</span>{" "}
+              · <span className="font-mono">{(shipment.profiles as { warehouse_code: string })?.warehouse_code}</span>
+            </p>
+          </div>
+          <span className={`badge-${shipment.status} text-sm px-3 py-1.5`}>{shipment.status.replace(/_/g, " ")}</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-4">
+          <div className="flex items-center gap-2 text-slate-300">
+            {shipment.mode === "sea" ? <Ship className="w-4 h-4 text-brand-400" /> : <Plane className="w-4 h-4 text-brand-400" />}
+            <span className="capitalize">{shipment.mode} freight</span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-300">
+            <MapPin className="w-4 h-4 text-accent-400" />
+            {shipment.destination_country}
+          </div>
+          {shipment.freight_cost && (
+            <div className="text-slate-300">${Number(shipment.freight_cost).toFixed(2)} USD</div>
+          )}
+        </div>
+
+        {/* Maersk refs */}
+        {(shipment.maersk_carrier_booking_reference || shipment.maersk_transport_document_reference || shipment.maersk_equipment_reference) && (
+          <div className="mt-4 pt-4 border-t border-white/8 space-y-1 text-xs">
+            <p className="text-slate-400 font-medium mb-2">Maersk References</p>
+            {shipment.maersk_carrier_booking_reference && (
+              <p className="text-slate-300 font-mono">Booking: {shipment.maersk_carrier_booking_reference}</p>
+            )}
+            {shipment.maersk_transport_document_reference && (
+              <p className="text-slate-300 font-mono">B/L: {shipment.maersk_transport_document_reference}</p>
+            )}
+            {shipment.maersk_equipment_reference && (
+              <p className="text-slate-300 font-mono">Container: {shipment.maersk_equipment_reference}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Status update */}
+      <div className="card p-5 mb-6">
+        <h2 className="text-sm font-semibold text-white mb-4">Update Status</h2>
+        <AdminShipmentStatusForm shipmentId={id} currentStatus={shipment.status} />
+      </div>
+
+      {/* Add manual milestone */}
+      <div className="card p-5 mb-6">
+        <h2 className="text-sm font-semibold text-white mb-4">Add Manual Milestone</h2>
+        <AdminMilestoneForm shipmentId={id} />
+      </div>
+
+      {/* Tracking timeline */}
+      <div className="card p-5 mb-6">
+        <h2 className="text-sm font-semibold text-white mb-4">Tracking Events</h2>
+        <TrackingTimeline events={events ?? []} shipmentStatus={shipment.status} />
+      </div>
+
+      {/* Parcels */}
+      {parcelLinks && parcelLinks.length > 0 && (
+        <div className="card p-5">
+          <h2 className="text-sm font-semibold text-white mb-4">Consolidated Parcels</h2>
+          <div className="space-y-2">
+            {parcelLinks.map((l) => {
+              const p = l.parcels as unknown as { id: string; local_tracking_number: string; item_description: string | null; quantity: number; weight_kg: number | null };
+              return (
+                <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/3 text-sm">
+                  <span className="font-mono text-white flex-1">{p.local_tracking_number}</span>
+                  <span className="text-slate-400 text-xs">{p.item_description ?? "—"}</span>
+                  {p.weight_kg && <span className="text-slate-400 text-xs">{p.weight_kg}kg</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

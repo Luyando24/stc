@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-maersk",
+      "schedule": "*/30 * * * *"
+    }
+  ]
+}
