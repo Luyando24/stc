@@ -18,6 +18,7 @@ import {
   Building,
   Map,
   ClipboardList,
+  CheckCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Profile } from "@/lib/types";
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/receiver-addresses", label: "Receiver Addresses", icon: MapPin },
   { href: "/dashboard/parcels", label: "Pending Parcels", icon: Package },
   { href: "/dashboard/shipments", label: "All Shipments", icon: Plane },
+  { href: "/dashboard/delivered", label: "Delivered", icon: CheckCircle },
 ];
 
 export default function DashboardNav({ profile }: { profile: Profile | null }) {
@@ -201,16 +203,16 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
             <span className="text-[10px] font-medium">Shipments</span>
           </Link>
 
-          {/* Address */}
+          {/* Delivered */}
           <Link
-            href="/dashboard/receiver-addresses"
+            href="/dashboard/delivered"
             className={clsx(
               "flex flex-col items-center gap-1 p-1.5 transition-colors",
-              pathname.startsWith("/dashboard/receiver-addresses") ? "text-brand-600" : "text-slate-500 hover:text-slate-955"
+              pathname.startsWith("/dashboard/delivered") ? "text-brand-600" : "text-slate-500 hover:text-slate-955"
             )}
           >
-            <MapPin className="w-5 h-5" />
-            <span className="text-[10px] font-medium font-sans">Addresses</span>
+            <CheckCircle className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Delivered</span>
           </Link>
         </div>
       </div>
