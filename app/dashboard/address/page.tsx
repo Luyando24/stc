@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { CopyButton } from "@/components/CopyButton";
 import { MapPin, Phone, User, HelpCircle, AlertCircle } from "lucide-react";
+import { DeliveryAddressForm } from "@/components/dashboard/DeliveryAddressForm";
 
 export default async function WarehouseAddressPage() {
   const supabase = await createClient();
@@ -145,6 +146,14 @@ export default async function WarehouseAddressPage() {
           </div>
         </div>
       </div>
+
+      {/* Receiver Address Outside China Form */}
+      <DeliveryAddressForm
+        initialCountry={profile?.country ?? null}
+        initialPhone={profile?.phone ?? null}
+        initialAddress={profile?.delivery_address ?? null}
+        userId={user.id}
+      />
     </div>
   );
 }

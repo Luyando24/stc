@@ -6,6 +6,7 @@ export interface Profile {
   full_name: string | null;
   phone: string | null;
   country: string | null;
+  delivery_address: string | null;
   role: UserRole;
   created_at: string;
 }
