@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
-export function CopyButton({ text, label = "Copy code" }: { text: string; label?: string }) {
+export function CopyButton({
+  text,
+  label = "Copy",
+  variant = "button"
+}: {
+  text: string;
+  label?: string;
+  variant?: "button" | "inline";
+}) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -15,6 +23,28 @@ export function CopyButton({ text, label = "Copy code" }: { text: string; label?
       console.error("Failed to copy text: ", err);
     }
   };
+
+  if (variant === "inline") {
+    return (
+      <button
+        onClick={handleCopy}
+        className="text-brand-600 hover:text-brand-700 font-semibold text-xs flex items-center gap-1 transition-colors px-2 py-1 rounded-lg hover:bg-brand-50 border border-transparent hover:border-brand-100"
+        type="button"
+      >
+        {copied ? (
+          <>
+            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-emerald-600 font-medium">Copied!</span>
+          </>
+        ) : (
+          <>
+            <Copy className="w-3.5 h-3.5" />
+            <span>{label}</span>
+          </>
+        )}
+      </button>
+    );
+  }
 
   return (
     <button
