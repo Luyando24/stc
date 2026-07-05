@@ -97,7 +97,7 @@ export default async function DashboardPage() {
                 Your China Warehouse Delivery Code
               </p>
               <p className="text-2xl font-bold text-slate-100 font-mono tracking-wider mt-1">
-                {profile?.warehouse_code ?? "STC-CN-XXXX"}
+                {profile?.warehouse_code ?? "XXXX"}
               </p>
             </div>
 
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
                   China Warehouse Address
                 </p>
                 <p className="text-slate-200 mt-1 font-medium text-sm leading-relaxed">
-                  广州市越秀区环市西路202号之三美博运动城902 <span className="text-brand-400 font-mono font-bold">({profile?.warehouse_code ?? "STC-CN-XXXX"})</span>
+                  广州市越秀区环市西路202号之三美博运动城902 <span className="text-brand-400 font-mono font-bold">({profile?.warehouse_code ?? "XXXX"})</span>
                 </p>
               </div>
               <div>
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
               </div>
             </div>
             <p className="text-xs text-slate-450 italic">
-              * Make sure your delivery code ({profile?.warehouse_code ?? "STC-CN-XXXX"}) is included in the shipping address or receiver name so we can identify your parcel.
+              * Make sure your delivery code ({profile?.warehouse_code ?? "XXXX"}) is included in the shipping address or receiver name so we can identify your parcel.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:flex-col shrink-0">

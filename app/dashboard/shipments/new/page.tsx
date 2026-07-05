@@ -180,7 +180,7 @@ export default function NewShipmentPage() {
 
         {/* Destination */}
         <div className="card p-5">
-          <h2 className="text-sm font-semibold text-slate-900 mb-4">Destination Country</h2>try</h2>
+          <h2 className="text-sm font-semibold text-slate-900 mb-4">Destination Country</h2>
           <select
             value={destination}
             onChange={(e) => setDestination(e.target.value)}

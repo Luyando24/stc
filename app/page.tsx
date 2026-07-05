@@ -31,7 +31,7 @@ const STEPS = [
     step: "01",
     title: "Get Your Warehouse Code",
     description:
-      "Register instantly to receive your unique STC-CN warehouse code — your delivery address in Guangzhou, China.",
+      "Register instantly to receive your unique 4-digit delivery code — your personal identifier for receiving packages at our Guangzhou, China warehouse.",
   },
   {
     step: "02",
