@@ -29,12 +29,12 @@ export default async function ParcelsPage() {
         <div>
           <h1 className="text-2xl font-display font-bold text-slate-900">My Parcels</h1>
           <p className="text-slate-500 text-sm mt-1">
-            All parcels you&apos;ve pre-alerted to our China warehouse
+            All parcels you&apos;ve added to our China warehouse
           </p>
         </div>
         <Link href="/dashboard/pre-alert" className="btn-primary">
           <Plus className="w-4 h-4" />
-          Pre-alert parcel
+          Add parcel
         </Link>
       </div>
 
@@ -43,10 +43,10 @@ export default async function ParcelsPage() {
           <Package className="w-10 h-10 text-slate-450 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-1">No parcels yet</h3>
           <p className="text-slate-550 text-sm mb-6">
-            Submit a pre-alert when your supplier dispatches a parcel.
+            Add a parcel when your supplier dispatches it.
           </p>
           <Link href="/dashboard/pre-alert" className="btn-primary">
-            Submit pre-alert
+            Add parcel
           </Link>
         </div>
       ) : (
@@ -77,7 +77,7 @@ export default async function ParcelsPage() {
                   </div>
                 )}
                 <div className="border-t border-slate-100 pt-2 flex justify-between items-center text-xs text-slate-400">
-                  <span>Pre-alerted</span>
+                  <span>Added</span>
                   <span>{new Date(parcel.created_at).toLocaleDateString()}</span>
                 </div>
               </div>

@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   MapPin,
+  ClipboardList,
 } from "lucide-react";
 import { ParcelStatus, ShipmentStatus } from "@/lib/types";
 
@@ -114,27 +115,36 @@ export default async function DashboardPage() {
             value: parcelCounts.pending,
             icon: Clock,
             color: "text-amber-600",
+            href: "/dashboard/parcels",
           },
           {
             label: "Arrived at Warehouse",
             value: parcelCounts.arrived,
             icon: CheckCircle2,
             color: "text-blue-600",
+            href: "/dashboard/parcels",
           },
           {
-            label: "Active Shipments",
-            value: shipments?.filter((s) => s.status !== "delivered").length ?? 0,
-            icon: Plane,
+            label: "Active Orders",
+            value: shipments?.filter((s) => s.status !== "delivered" && s.status !== "cancelled").length ?? 0,
+            icon: ClipboardList,
             color: "text-brand-600",
+            href: "/dashboard/shipments",
           },
         ].map((stat) => (
-          <div key={stat.label} className="card p-4">
-            <stat.icon className={`w-5 h-5 ${stat.color} mb-3`} />
-            <p className="text-2xl font-display font-bold text-slate-900">
-              {stat.value}
-            </p>
+          <Link
+            key={stat.label}
+            href={stat.href}
+            className="card-hover p-4 flex flex-col justify-between transition-all"
+          >
+            <div>
+              <stat.icon className={`w-5 h-5 ${stat.color} mb-3`} />
+              <p className="text-2xl font-display font-bold text-slate-900">
+                {stat.value}
+              </p>
+            </div>
             <p className="text-slate-500 text-xs mt-0.5">{stat.label}</p>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -145,15 +155,15 @@ export default async function DashboardPage() {
             <Package className="w-5 h-5 text-brand-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-900">Submit Pre-Alert</p>
+            <p className="font-semibold text-slate-900">Add Parcel</p>
             <p className="text-slate-500 text-sm">
-              Notify us of an incoming parcel from China
+              Add an incoming parcel from China
             </p>
           </div>
           <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
         </Link>
 
-        <Link href="/dashboard/shipments/new" className="card-hover p-5 flex items-center gap-4">
+        <Link href="/dashboard/ship" className="card-hover p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-accent-50 flex items-center justify-center flex-shrink-0">
             <Plane className="w-5 h-5 text-accent-600" />
           </div>
@@ -239,10 +249,10 @@ export default async function DashboardPage() {
           <Package className="w-10 h-10 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-1">No activity yet</h3>
           <p className="text-slate-500 text-sm mb-6">
-            Start by submitting a pre-alert for your first parcel from China.
+            Start by adding your first parcel from China.
           </p>
           <Link href="/dashboard/pre-alert" className="btn-primary">
-            Submit first pre-alert
+            Add first parcel
           </Link>
         </div>
       )}

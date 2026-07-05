@@ -17,6 +17,7 @@ import {
   MapPin,
   Building,
   Map,
+  ClipboardList,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Profile } from "@/lib/types";
@@ -27,7 +28,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/address", label: "China Warehouse", icon: Building },
   { href: "/dashboard/receiver-addresses", label: "Receiver Addresses", icon: MapPin },
   { href: "/dashboard/parcels", label: "My Parcels", icon: Package },
-  { href: "/dashboard/shipments", label: "My Shipments", icon: Plane },
+  { href: "/dashboard/shipments", label: "My Orders", icon: ClipboardList },
 ];
 
 export default function DashboardNav({ profile }: { profile: Profile | null }) {
@@ -72,7 +73,7 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
           onClick={() => setMobileOpen(false)}
         >
           <Plus className="w-3.5 h-3.5" />
-          Pre-alert parcel
+          Add parcel
         </Link>
       </div>
 
@@ -187,18 +188,18 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
             <span className="text-[10px] font-medium">Parcels</span>
           </Link>
 
-          {/* Center Plus: Pre-Alert Action */}
+          {/* Center float: Ship Now */}
           <div className="relative -top-5">
             <Link
-              href="/dashboard/pre-alert"
-              className="w-12 h-12 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-[0_4px_12px_rgba(29,78,216,0.35)] hover:bg-brand-700 transition-all hover:scale-105 hover:rotate-90 duration-300"
-              aria-label="Pre-alert parcel"
+              href="/dashboard/ship"
+              className="w-12 h-12 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-[0_4px_12px_rgba(29,78,216,0.35)] hover:bg-brand-700 transition-all hover:scale-105 duration-300"
+              aria-label="Ship Now"
             >
-              <Plus className="w-6 h-6" />
+              <Plane className="w-6 h-6 animate-pulse" />
             </Link>
           </div>
 
-          {/* Shipments */}
+          {/* My Orders */}
           <Link
             href="/dashboard/shipments"
             className={clsx(
@@ -206,8 +207,8 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
               pathname.startsWith("/dashboard/shipments") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
             )}
           >
-            <Plane className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Shipments</span>
+            <ClipboardList className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Orders</span>
           </Link>
 
           {/* Address */}

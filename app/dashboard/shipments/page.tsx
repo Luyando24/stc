@@ -18,10 +18,10 @@ export default async function ShipmentsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-bold text-slate-900">My Shipments</h1>
-          <p className="text-slate-500 text-sm mt-1">Track all your international shipments</p>
+          <h1 className="text-2xl font-display font-bold text-slate-900">My Orders</h1>
+          <p className="text-slate-500 text-sm mt-1">Track all your international orders</p>
         </div>
-        <Link href="/dashboard/shipments/new" className="btn-primary">
+        <Link href="/dashboard/ship" className="btn-primary">
           <Plus className="w-4 h-4" /> Ship Parcel
         </Link>
       </div>
@@ -31,7 +31,7 @@ export default async function ShipmentsPage() {
           <Plane className="w-10 h-10 text-slate-450 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-1">No shipments yet</h3>
           <p className="text-slate-555 text-sm mb-6">Once your parcels arrive at our warehouse, you can ship them.</p>
-          <Link href="/dashboard/shipments/new" className="btn-primary">Ship parcel</Link>
+          <Link href="/dashboard/ship" className="btn-primary">Ship parcel</Link>
         </div>
       ) : (
         <>

@@ -58,7 +58,7 @@ export default function PreAlertPage() {
           <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
             <Package className="w-7 h-7 text-emerald-400" />
           </div>
-          <h2 className="text-xl font-display font-bold text-slate-900 mb-2">Pre-alert submitted!</h2>
+          <h2 className="text-xl font-display font-bold text-slate-900 mb-2">Parcel added successfully!</h2>
           <p className="text-slate-500 text-sm mb-6">
             We&apos;ve registered your parcel. Once it arrives at our China warehouse, 
             we&apos;ll update its status to &quot;Arrived&quot;.
@@ -68,7 +68,7 @@ export default function PreAlertPage() {
               onClick={() => { setSuccess(false); setForm({ local_tracking_number: "", supplier_name: "", item_description: "", quantity: 1, declared_value: "" }); }}
               className="btn-secondary"
             >
-              Submit another
+              Add another
             </button>
             <button onClick={() => router.push("/dashboard/parcels")} className="btn-primary">
               View my parcels
@@ -82,9 +82,9 @@ export default function PreAlertPage() {
   return (
     <div className="max-w-lg">
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-slate-900">Submit Pre-Alert</h1>
+        <h1 className="text-2xl font-display font-bold text-slate-900">Add Parcel</h1>
         <p className="text-slate-500 text-sm mt-1">
-          Tell us about a parcel your supplier has dispatched to our China warehouse.
+          Add a parcel that your supplier has dispatched to our China warehouse.
         </p>
       </div>
 
@@ -179,8 +179,8 @@ export default function PreAlertPage() {
 
           <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
             {loading ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
-            ) : "Submit Pre-Alert"}
+              <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</>
+            ) : "Add Parcel"}
           </button>
         </form>
       </div>
