@@ -29,12 +29,11 @@ export default function SignupPage() {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
       },
     });
 
@@ -44,8 +43,13 @@ export default function SignupPage() {
       return;
     }
 
-    setSuccess(true);
-    setLoading(false);
+    if (data?.session) {
+      router.push("/dashboard");
+      router.refresh();
+    } else {
+      setSuccess(true);
+      setLoading(false);
+    }
   }
 
   if (success) {
@@ -55,13 +59,12 @@ export default function SignupPage() {
           <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-emerald-600" />
           </div>
-          <h2 className="text-2xl font-display font-bold text-slate-900 mb-2">Check your email</h2>
+          <h2 className="text-2xl font-display font-bold text-slate-900 mb-2">Account Created!</h2>
           <p className="text-slate-600 mb-6">
-            We&apos;ve sent a confirmation link to <span className="text-slate-900 font-medium">{email}</span>.
-            Click it to activate your account and receive your unique warehouse code.
+            Your account has been successfully created. You can now log in to access your China warehouse code.
           </p>
           <Link href="/login" className="btn-primary justify-center">
-            Back to login
+            Go to Login
           </Link>
         </div>
       </div>

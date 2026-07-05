@@ -109,7 +109,7 @@ declare
   next_val int;
   code text;
 begin
-  next_val := nextval('warehouse_code_seq');
+  next_val := nextval('public.warehouse_code_seq');
   code := 'STC-CN-' || lpad(next_val::text, 4, '0');
   return code;
 end;
@@ -124,7 +124,7 @@ declare
   next_val int;
   year_str text;
 begin
-  next_val := nextval('shipment_number_seq');
+  next_val := nextval('public.shipment_number_seq');
   year_str := extract(year from now())::text;
   return 'STC-SH-' || year_str || '-' || lpad(next_val::text, 6, '0');
 end;
@@ -136,10 +136,10 @@ $$ language plpgsql;
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into profiles (id, warehouse_code, full_name)
+  insert into public.profiles (id, warehouse_code, full_name)
   values (
     new.id,
-    generate_warehouse_code(),
+    public.generate_warehouse_code(),
     coalesce(new.raw_user_meta_data->>'full_name', '')
   );
   return new;
@@ -163,7 +163,7 @@ alter table tracking_events enable row level security;
 -- Helper function: get role of current user
 create or replace function get_my_role()
 returns user_role as $$
-  select role from profiles where id = auth.uid();
+  select role from public.profiles where id = auth.uid();
 $$ language sql security definer stable;
 
 -- ── profiles RLS ──────────────────────────────────────────────

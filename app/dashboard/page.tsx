@@ -4,45 +4,74 @@ import Link from "next/link";
 import {
   Package,
   Plane,
-  Copy,
   ArrowRight,
   Clock,
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
 import { ParcelStatus, ShipmentStatus } from "@/lib/types";
+import { CopyButton } from "@/components/CopyButton";
 
 function StatusIcon({ status }: { status: ParcelStatus | ShipmentStatus }) {
-  if (status === "arrived" || status === "delivered")
-    return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
-  if (status === "flagged" || status === "exception")
-    return <AlertTriangle className="w-4 h-4 text-amber-400" />;
-  return <Clock className="w-4 h-4 text-slate-400" />;
+  switch (status) {
+    case "pending":
+    case "processing":
+    case "booked":
+      return <Clock className="w-5 h-5 text-amber-500" />;
+    case "arrived":
+    case "consolidated":
+    case "in_transit":
+    case "customs":
+    case "out_for_delivery":
+    case "delivered":
+      return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
+    case "flagged":
+    case "exception":
+      return <AlertTriangle className="w-5 h-5 text-rose-500" />;
+    case "cancelled":
+      return <AlertTriangle className="w-5 h-5 text-slate-500" />;
+    default:
+      return <Clock className="w-5 h-5 text-slate-500" />;
+  }
 }
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: parcels }, { data: shipments }] =
-    await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).single(),
-      supabase
-        .from("parcels")
-        .select("*")
-        .eq("customer_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5),
-      supabase
-        .from("shipments")
-        .select("*")
-        .eq("customer_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5),
-    ]);
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Fetch user profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role === "admin" || profile?.role === "warehouse_staff") {
+    redirect("/admin");
+  }
+
+  // Fetch recent parcels (max 5)
+  const { data: parcels } = await supabase
+    .from("parcels")
+    .select("*")
+    .eq("customer_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  // Fetch recent shipments (max 5)
+  const { data: shipments } = await supabase
+    .from("shipments")
+    .select("*")
+    .eq("customer_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(5);
 
   const parcelCounts = {
     pending: parcels?.filter((p) => p.status === "pending").length ?? 0,
@@ -52,40 +81,28 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-white">
-          Welcome back, {profile?.full_name?.split(" ")[0] ?? "there"} 👋
+      {/* Welcome & Warehouse Code */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8">
+        <h1 className="text-3xl font-extrabold text-slate-100">
+          Welcome back, {profile?.full_name || "Customer"}!
         </h1>
-        <p className="text-slate-400 mt-1 text-sm">
-          Here&apos;s an overview of your shipments and parcels.
+        <p className="text-slate-400 mt-2 max-w-xl">
+          Use the details below to ship your items to our China warehouse, and then pre-alert them.
         </p>
-      </div>
 
-      {/* Warehouse Code Banner */}
-      <div className="card p-5 border-brand-500/30 bg-gradient-to-r from-brand-500/10 to-transparent">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="mt-6 bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <p className="text-xs font-medium text-brand-400 uppercase tracking-wider mb-1">
-              Your China Warehouse Code
+            <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">
+              Your China Warehouse Delivery Code
             </p>
-            <p className="text-3xl font-display font-bold text-white tracking-wide">
-              {profile?.warehouse_code}
+            <p className="text-2xl font-bold text-slate-100 font-mono tracking-wider mt-1">
+              {profile?.warehouse_code ?? "STC-CN-XXXX"}
             </p>
             <p className="text-slate-400 text-sm mt-1">
               Give this code to your suppliers in China as your delivery address
             </p>
           </div>
-          <button
-            id="copy-warehouse-code"
-            onClick={() =>
-              navigator.clipboard.writeText(profile?.warehouse_code ?? "")
-            }
-            className="btn-secondary"
-          >
-            <Copy className="w-4 h-4" />
-            Copy code
-          </button>
+          <CopyButton text={profile?.warehouse_code ?? ""} />
         </div>
       </div>
 
