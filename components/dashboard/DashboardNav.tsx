@@ -65,17 +65,7 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
         </div>
       )}
 
-      {/* Quick action */}
-      <div className="px-3 mt-4">
-        <Link
-          href="/dashboard/pre-alert"
-          className="btn-primary w-full justify-center text-xs py-2"
-          onClick={() => setMobileOpen(false)}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add parcel
-        </Link>
-      </div>
+
 
       {/* Nav */}
       <nav className="flex-1 px-3 mt-4 space-y-1">

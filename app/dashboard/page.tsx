@@ -150,14 +150,14 @@ export default async function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <Link href="/dashboard/pre-alert" className="card-hover p-5 flex items-center gap-4">
+        <Link href="/dashboard/address" className="card-hover p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
-            <Package className="w-5 h-5 text-brand-600" />
+            <MapPin className="w-5 h-5 text-brand-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-900">Add Parcel</p>
+            <p className="font-semibold text-slate-900">China Warehouse Address</p>
             <p className="text-slate-500 text-sm">
-              Add an incoming parcel from China
+              Get your China warehouse shipping address
             </p>
           </div>
           <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
@@ -246,13 +246,13 @@ export default async function DashboardPage() {
       {/* Empty state */}
       {(!parcels || parcels.length === 0) && (!shipments || shipments.length === 0) && (
         <div className="card p-12 text-center">
-          <Package className="w-10 h-10 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">No activity yet</h3>
-          <p className="text-slate-500 text-sm mb-6">
-            Start by adding your first parcel from China.
+          <Package className="w-10 h-10 text-slate-450 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">No parcels yet</h3>
+          <p className="text-slate-500 text-sm mb-6 max-w-md mx-auto leading-relaxed">
+            Share your unique delivery code with your suppliers. Once they send packages to our warehouse, we will register them under your account and they will appear here.
           </p>
-          <Link href="/dashboard/pre-alert" className="btn-primary">
-            Add first parcel
+          <Link href="/dashboard/address" className="btn-primary">
+            View Warehouse Address
           </Link>
         </div>
       )}

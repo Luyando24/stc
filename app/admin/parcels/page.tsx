@@ -34,9 +34,12 @@ export default async function AdminParcelsPage({
         <div>
           <h1 className="text-2xl font-display font-bold text-slate-900">Parcels</h1>
           <p className="text-slate-500 text-sm mt-1">
-            Manage pre-alerts and mark arrivals
+            Manage customer parcels and mark arrivals
           </p>
         </div>
+        <Link href="/admin/parcels/new" className="btn-primary">
+          <Plus className="w-4 h-4" /> Add Parcel
+        </Link>
       </div>
 
       {/* Filter tabs */}
