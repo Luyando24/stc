@@ -136,6 +136,7 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-2 text-slate-600 hover:text-slate-900"
+          aria-label="Toggle Menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -145,7 +146,7 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
       {mobileOpen && (
         <>
           <div
-            className="lg:hidden fixed inset-0 z-40 bg-black/40"
+            className="lg:hidden fixed inset-0 z-45 bg-black/40"
             onClick={() => setMobileOpen(false)}
           />
           <aside className="lg:hidden fixed inset-y-0 left-0 w-64 bg-slate-50 border-r border-slate-200 z-50">
@@ -153,6 +154,67 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
           </aside>
         </>
       )}
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] z-40 px-3 py-2">
+        <div className="flex items-center justify-around max-w-md mx-auto">
+          {/* Overview */}
+          <Link
+            href="/dashboard"
+            className={clsx(
+              "flex flex-col items-center gap-1 p-1.5 transition-colors",
+              pathname === "/dashboard" ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+            )}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Overview</span>
+          </Link>
+
+          {/* Parcels */}
+          <Link
+            href="/dashboard/parcels"
+            className={clsx(
+              "flex flex-col items-center gap-1 p-1.5 transition-colors",
+              pathname.startsWith("/dashboard/parcels") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+            )}
+          >
+            <Package className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Parcels</span>
+          </Link>
+
+          {/* Center Plus: Pre-Alert Action */}
+          <div className="relative -top-5">
+            <Link
+              href="/dashboard/pre-alert"
+              className="w-12 h-12 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-[0_4px_12px_rgba(29,78,216,0.35)] hover:bg-brand-700 transition-all hover:scale-105 hover:rotate-90 duration-300"
+              aria-label="Pre-alert parcel"
+            >
+              <Plus className="w-6 h-6" />
+            </Link>
+          </div>
+
+          {/* Shipments */}
+          <Link
+            href="/dashboard/shipments"
+            className={clsx(
+              "flex flex-col items-center gap-1 p-1.5 transition-colors",
+              pathname.startsWith("/dashboard/shipments") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+            )}
+          >
+            <Plane className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Shipments</span>
+          </Link>
+
+          {/* Profile / Menu toggle */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex flex-col items-center gap-1 p-1.5 text-slate-500 hover:text-slate-955"
+          >
+            <Settings className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Menu</span>
+          </button>
+        </div>
+      </div>
 
       {/* Mobile top padding spacer */}
       <div className="lg:hidden h-14" />

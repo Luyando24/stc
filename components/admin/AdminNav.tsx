@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 import {
   Package2,
   LayoutDashboard,
@@ -11,6 +12,9 @@ import {
   Users,
   LogOut,
   ShieldCheck,
+  Menu,
+  X,
+  Settings,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -31,6 +35,7 @@ export default function AdminNav({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -38,8 +43,8 @@ export default function AdminNav({
     router.refresh();
   }
 
-  return (
-    <aside className="hidden lg:flex flex-col w-60 fixed inset-y-0 left-0 bg-slate-50 border-r border-slate-200 z-30">
+  const NavContent = () => (
+    <div className="flex flex-col h-full bg-slate-50">
       {/* Logo */}
       <div className="px-4 py-5 border-b border-slate-200">
         <Link href="/" className="flex items-center gap-2">
@@ -62,6 +67,7 @@ export default function AdminNav({
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setMobileOpen(false)}
               className={clsx(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                 active
@@ -83,6 +89,7 @@ export default function AdminNav({
         </div>
         <Link
           href="/dashboard"
+          onClick={() => setMobileOpen(false)}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all"
         >
           <LayoutDashboard className="w-4 h-4" />
@@ -96,6 +103,111 @@ export default function AdminNav({
           Sign out
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex flex-col w-60 fixed inset-y-0 left-0 bg-slate-50 border-r border-slate-200 z-30">
+        <NavContent />
+      </aside>
+
+      {/* Mobile top bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-slate-200 z-30 flex items-center justify-between px-4">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
+            <Package2 className="w-3.5 h-3.5 text-white" />
+          </div>
+          <span className="font-display font-bold text-slate-900 text-sm">STC Logistics</span>
+          <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-semibold uppercase">Admin</span>
+        </Link>
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="p-2 text-slate-600 hover:text-slate-900"
+          aria-label="Toggle Menu"
+        >
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <>
+          <div
+            className="lg:hidden fixed inset-0 z-45 bg-black/40"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="lg:hidden fixed inset-y-0 left-0 w-64 bg-slate-50 border-r border-slate-200 z-50">
+            <NavContent />
+          </aside>
+        </>
+      )}
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] z-40 px-3 py-2">
+        <div className="flex items-center justify-between max-w-md mx-auto">
+          {/* Dashboard */}
+          <Link
+            href="/admin"
+            className={clsx(
+              "flex flex-col items-center gap-1 p-1.5 transition-colors",
+              pathname === "/admin" ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+            )}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Dashboard</span>
+          </Link>
+
+          {/* Parcels */}
+          <Link
+            href="/admin/parcels"
+            className={clsx(
+              "flex flex-col items-center gap-1 p-1.5 transition-colors",
+              pathname.startsWith("/admin/parcels") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+            )}
+          >
+            <Package className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Parcels</span>
+          </Link>
+
+          {/* Shipments */}
+          <Link
+            href="/admin/shipments"
+            className={clsx(
+              "flex flex-col items-center gap-1 p-1.5 transition-colors",
+              pathname.startsWith("/admin/shipments") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+            )}
+          >
+            <Plane className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Shipments</span>
+          </Link>
+
+          {/* Customers */}
+          <Link
+            href="/admin/customers"
+            className={clsx(
+              "flex flex-col items-center gap-1 p-1.5 transition-colors",
+              pathname.startsWith("/admin/customers") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+            )}
+          >
+            <Users className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Customers</span>
+          </Link>
+
+          {/* Menu button */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex flex-col items-center gap-1 p-1.5 text-slate-500 hover:text-slate-955"
+          >
+            <Settings className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Menu</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile top padding spacer */}
+      <div className="lg:hidden h-14" />
+    </>
   );
 }

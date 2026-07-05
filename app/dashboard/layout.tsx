@@ -21,7 +21,7 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-slate-50 flex">
       <DashboardNav profile={profile} />
-      <main className="flex-1 lg:pl-64 min-h-screen">
+      <main className="flex-1 lg:pl-64 min-h-screen pb-24 lg:pb-0">
         <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
           {children}
         </div>
