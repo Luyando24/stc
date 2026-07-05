@@ -1,18 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-plus-jakarta",
-  display: "swap",
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -26,16 +13,7 @@ export const metadata: Metadata = {
     template: "%s | STC Logistics",
   },
   description:
-    "STC Logistics provides reliable air and sea freight forwarding services from China to Africa. Track your shipments, manage pre-alerts, and consolidate your cargo with ease.",
-  keywords: [
-    "freight forwarding",
-    "China to Africa",
-    "air freight",
-    "sea freight",
-    "cargo tracking",
-    "consolidation",
-    "logistics",
-  ],
+    "Reliable air and sea freight forwarding services from China to Africa. Track parcels, manage shipments, and get instant updates.",
   openGraph: {
     title: "STC Logistics — Freight Forwarding from China to Africa",
     description:
@@ -50,7 +28,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      </head>
       <body className="font-sans">{children}</body>
     </html>
   );
