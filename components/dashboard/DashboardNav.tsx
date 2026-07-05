@@ -15,6 +15,8 @@ import {
   X,
   Plus,
   MapPin,
+  Building,
+  Map,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Profile } from "@/lib/types";
@@ -22,7 +24,8 @@ import clsx from "clsx";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/address", label: "Warehouse Address", icon: MapPin },
+  { href: "/dashboard/address", label: "China Warehouse", icon: Building },
+  { href: "/dashboard/receiver-addresses", label: "Receiver Addresses", icon: MapPin },
   { href: "/dashboard/parcels", label: "My Parcels", icon: Package },
   { href: "/dashboard/shipments", label: "My Shipments", icon: Plane },
 ];
@@ -209,14 +212,14 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
 
           {/* Address */}
           <Link
-            href="/dashboard/address"
+            href="/dashboard/receiver-addresses"
             className={clsx(
               "flex flex-col items-center gap-1 p-1.5 transition-colors",
-              pathname.startsWith("/dashboard/address") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+              pathname.startsWith("/dashboard/receiver-addresses") ? "text-brand-600" : "text-slate-500 hover:text-slate-955"
             )}
           >
             <MapPin className="w-5 h-5" />
-            <span className="text-[10px] font-medium font-sans">Address</span>
+            <span className="text-[10px] font-medium font-sans">Addresses</span>
           </Link>
         </div>
       </div>

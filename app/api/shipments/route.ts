@@ -5,7 +5,7 @@ import { z } from "zod";
 const ShipmentSchema = z.object({
   parcel_ids: z.array(z.string().uuid()).min(1, "Select at least one parcel"),
   mode: z.enum(["air", "sea"]),
-  destination_country: z.string().min(1),
+  receiver_address_id: z.string().uuid("Please select a receiver address"),
 });
 
 export async function POST(request: NextRequest) {
@@ -26,7 +26,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { parcel_ids, mode, destination_country } = parsed.data;
+  const { parcel_ids, mode, receiver_address_id } = parsed.data;
+
+  // Fetch selected receiver address
+  const { data: addr, error: addrError } = await supabase
+    .from("receiver_addresses")
+    .select("*")
+    .eq("id", receiver_address_id)
+    .eq("customer_id", user.id)
+    .single();
+
+  if (addrError || !addr) {
+    return NextResponse.json(
+      { error: "Invalid receiver address selected." },
+      { status: 400 }
+    );
+  }
 
   // Verify all parcels belong to user and are in "arrived" status
   const { data: parcels, error: parcelError } = await supabase
@@ -62,7 +77,11 @@ export async function POST(request: NextRequest) {
       customer_id: user.id,
       stc_tracking_number: trackingData,
       mode,
-      destination_country,
+      destination_country: addr.country,
+      receiver_address_id: addr.id,
+      receiver_name: addr.full_name,
+      receiver_phone: addr.phone,
+      receiver_address: addr.address,
       status: "processing",
     })
     .select("id")

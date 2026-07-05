@@ -78,6 +78,14 @@ export default async function ShipmentDetailPage({
           )}
         </div>
 
+        {shipment.receiver_name && (
+          <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 space-y-1">
+            <p className="font-semibold text-slate-700 uppercase tracking-wider text-[10px]">Receiver Details</p>
+            <p className="font-medium text-slate-900">{shipment.receiver_name} · {shipment.receiver_phone}</p>
+            <p className="font-sans leading-relaxed text-slate-700">{shipment.receiver_address}, {shipment.destination_country}</p>
+          </div>
+        )}
+
         {shipment.freight_cost && (
           <div className="mt-4 pt-4 border-t border-slate-100">
             <p className="text-xs text-slate-500">Freight Cost</p>

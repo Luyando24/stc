@@ -3,15 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, Plane, Ship, Package, CheckSquare, Square } from "lucide-react";
-import { Parcel } from "@/lib/types";
-
-const AFRICA_COUNTRIES = [
-  "Nigeria", "Ghana", "Kenya", "Tanzania", "Uganda", "Ethiopia", "Zambia",
-  "Zimbabwe", "South Africa", "Cameroon", "Côte d'Ivoire", "Senegal",
-  "Rwanda", "Mozambique", "Angola", "DR Congo", "Somalia", "Sudan",
-  "Other",
-];
+import { Loader2, Plane, Ship, Package, CheckSquare, Square, MapPin, AlertCircle, Plus, User, Phone } from "lucide-react";
+import { Parcel, ReceiverAddress } from "@/lib/types";
+import Link from "next/link";
 
 export default function NewShipmentPage() {
   const router = useRouter();
@@ -20,28 +14,46 @@ export default function NewShipmentPage() {
   const [arrivedParcels, setArrivedParcels] = useState<Parcel[]>([]);
   const [selectedParcels, setSelectedParcels] = useState<string[]>([]);
   const [mode, setMode] = useState<"air" | "sea">("sea");
-  const [destination, setDestination] = useState("");
+  const [receiverAddresses, setReceiverAddresses] = useState<ReceiverAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadParcels() {
+    async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      const { data } = await supabase
-        .from("parcels")
-        .select("*")
-        .eq("customer_id", user.id)
-        .eq("status", "arrived")
-        .order("arrived_at", { ascending: false });
+      const [parcelsRes, addressesRes] = await Promise.all([
+        supabase
+          .from("parcels")
+          .select("*")
+          .eq("customer_id", user.id)
+          .eq("status", "arrived")
+          .order("arrived_at", { ascending: false }),
+        supabase
+          .from("receiver_addresses")
+          .select("*")
+          .eq("customer_id", user.id)
+          .order("is_default", { ascending: false })
+          .order("created_at", { ascending: false }),
+      ]);
 
-      setArrivedParcels(data ?? []);
+      setArrivedParcels(parcelsRes.data ?? []);
+      
+      const addresses = addressesRes.data ?? [];
+      setReceiverAddresses(addresses);
+      
+      if (addresses.length > 0) {
+        const defaultAddr = addresses.find((a) => a.is_default) ?? addresses[0];
+        setSelectedAddressId(defaultAddr.id);
+      }
+      
       setFetching(false);
     }
-    loadParcels();
-  }, []);
+    loadData();
+  }, [router, supabase]);
 
   function toggleParcel(id: string) {
     setSelectedParcels((prev) =>
@@ -55,8 +67,8 @@ export default function NewShipmentPage() {
       setError("Please select at least one parcel.");
       return;
     }
-    if (!destination) {
-      setError("Please select a destination country.");
+    if (!selectedAddressId) {
+      setError("Please select a receiver address.");
       return;
     }
 
@@ -66,7 +78,11 @@ export default function NewShipmentPage() {
     const res = await fetch("/api/shipments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parcel_ids: selectedParcels, mode, destination_country: destination }),
+      body: JSON.stringify({
+        parcel_ids: selectedParcels,
+        mode,
+        receiver_address_id: selectedAddressId,
+      }),
     });
 
     const json = await res.json();
@@ -178,20 +194,71 @@ export default function NewShipmentPage() {
           </div>
         </div>
 
-        {/* Destination */}
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-slate-900 mb-4">Destination Country</h2>
-          <select
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            className="input"
-            required
-          >
-            <option value="">Select country…</option>
-            {AFRICA_COUNTRIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+        {/* Destination Address Selection */}
+        <div className="card p-5 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-sm font-semibold text-slate-900">Receiver Address</h2>
+            <Link
+              href="/dashboard/receiver-addresses"
+              className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Address
+            </Link>
+          </div>
+
+          {receiverAddresses.length === 0 ? (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="font-semibold">No receiver addresses found!</span>
+              </div>
+              <p>You must add at least one receiver address outside China before requesting a shipment.</p>
+              <Link
+                href="/dashboard/receiver-addresses"
+                className="btn bg-white hover:bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-lg text-xs font-semibold text-slate-700 inline-block mt-1 font-sans"
+              >
+                Create Address Now
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <select
+                value={selectedAddressId}
+                onChange={(e) => setSelectedAddressId(e.target.value)}
+                className="input font-sans text-sm w-full"
+                required
+              >
+                <option value="">Select receiver address…</option>
+                {receiverAddresses.map((addr) => (
+                  <option key={addr.id} value={addr.id}>
+                    {addr.label} — {addr.full_name} ({addr.country})
+                  </option>
+                ))}
+              </select>
+
+              {/* Show selected address preview */}
+              {(() => {
+                const selectedAddr = receiverAddresses.find((a) => a.id === selectedAddressId);
+                if (!selectedAddr) return null;
+                return (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-xs text-slate-600">
+                    <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-slate-400" />
+                      Recipient: {selectedAddr.full_name}
+                    </p>
+                    <p className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-slate-400" />
+                      Phone: {selectedAddr.phone}
+                    </p>
+                    <p className="flex items-center gap-1.5 font-sans leading-relaxed">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                      Address: {selectedAddr.address}, {selectedAddr.country}
+                    </p>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
 
         {error && (

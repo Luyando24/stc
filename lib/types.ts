@@ -59,8 +59,24 @@ export interface Shipment {
   freight_cost: number | null;
   estimated_delivery_date: string | null;
   notes: string | null;
+  receiver_address_id: string | null;
+  receiver_name: string | null;
+  receiver_phone: string | null;
+  receiver_address: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ReceiverAddress {
+  id: string;
+  customer_id: string;
+  label: string;
+  full_name: string;
+  phone: string;
+  country: string;
+  address: string;
+  is_default: boolean;
+  created_at: string;
 }
 
 export type TrackingEventSource = "maersk" | "manual";
