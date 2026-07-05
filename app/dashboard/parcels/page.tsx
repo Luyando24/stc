@@ -27,8 +27,8 @@ export default async function ParcelsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white">My Parcels</h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <h1 className="text-2xl font-display font-bold text-slate-900">My Parcels</h1>
+          <p className="text-slate-500 text-sm mt-1">
             All parcels you&apos;ve pre-alerted to our China warehouse
           </p>
         </div>
@@ -40,9 +40,9 @@ export default async function ParcelsPage() {
 
       {!parcels || parcels.length === 0 ? (
         <div className="card p-12 text-center">
-          <Package className="w-10 h-10 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-1">No parcels yet</h3>
-          <p className="text-slate-400 text-sm mb-6">
+          <Package className="w-10 h-10 text-slate-450 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">No parcels yet</h3>
+          <p className="text-slate-550 text-sm mb-6">
             Submit a pre-alert when your supplier dispatches a parcel.
           </p>
           <Link href="/dashboard/pre-alert" className="btn-primary">
@@ -50,46 +50,82 @@ export default async function ParcelsPage() {
           </Link>
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/5">
-                  <th className="text-left px-4 py-3 text-slate-400 font-medium">Tracking #</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-medium hidden sm:table-cell">Supplier</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-medium hidden md:table-cell">Description</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-medium">Status</th>
-                  <th className="text-left px-4 py-3 text-slate-400 font-medium hidden lg:table-cell">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {parcels.map((parcel: Parcel) => (
-                  <tr key={parcel.id} className="hover:bg-white/3 transition-colors">
-                    <td className="px-4 py-3">
-                      <span className="font-mono text-white text-xs">
-                        {parcel.local_tracking_number}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-300 hidden sm:table-cell">
-                      {parcel.supplier_name ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-300 hidden md:table-cell max-w-xs truncate">
-                      {parcel.item_description ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`badge-${parcel.status}`}>
-                        {STATUS_LABELS[parcel.status]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-400 hidden lg:table-cell text-xs">
-                      {new Date(parcel.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          {/* Mobile view: list of cards */}
+          <div className="space-y-3 sm:hidden">
+            {parcels.map((parcel: Parcel) => (
+              <div key={parcel.id} className="card p-4 space-y-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0">
+                    <p className="font-mono text-slate-900 font-semibold text-sm truncate">
+                      {parcel.local_tracking_number}
+                    </p>
+                    {parcel.supplier_name && (
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {parcel.supplier_name}
+                      </p>
+                    )}
+                  </div>
+                  <span className={`badge-${parcel.status} shrink-0`}>
+                    {STATUS_LABELS[parcel.status]}
+                  </span>
+                </div>
+                {(parcel.item_description || parcel.weight_kg) && (
+                  <div className="text-xs text-slate-700 bg-slate-50 p-2 rounded-lg">
+                    {parcel.item_description && <p>{parcel.item_description}</p>}
+                    {parcel.weight_kg && <p className="mt-0.5 font-medium text-slate-600">Weight: {parcel.weight_kg}kg</p>}
+                  </div>
+                )}
+                <div className="border-t border-slate-100 pt-2 flex justify-between items-center text-xs text-slate-400">
+                  <span>Pre-alerted</span>
+                  <span>{new Date(parcel.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+
+          {/* Desktop view: Table */}
+          <div className="hidden sm:block card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">Tracking #</th>
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium hidden sm:table-cell">Supplier</th>
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium hidden md:table-cell">Description</th>
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">Status</th>
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium hidden lg:table-cell">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {parcels.map((parcel: Parcel) => (
+                    <tr key={parcel.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <span className="font-mono text-slate-900 text-xs">
+                          {parcel.local_tracking_number}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-700 hidden sm:table-cell">
+                        {parcel.supplier_name ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700 hidden md:table-cell max-w-xs truncate">
+                        {parcel.item_description ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`badge-${parcel.status}`}>
+                          {STATUS_LABELS[parcel.status]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 hidden lg:table-cell text-xs">
+                        {new Date(parcel.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -32,8 +32,8 @@ export default async function AdminParcelsPage({
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white">Parcels</h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <h1 className="text-2xl font-display font-bold text-slate-900">Parcels</h1>
+          <p className="text-slate-500 text-sm mt-1">
             Manage pre-alerts and mark arrivals
           </p>
         </div>
@@ -45,10 +45,10 @@ export default async function AdminParcelsPage({
           <Link
             key={s}
             href={`/admin/parcels${s !== "all" ? `?status=${s}` : ""}`}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
               (status ?? "all") === s
-                ? "bg-brand-500/15 text-brand-300 border border-brand-500/30"
-                : "text-slate-400 hover:text-white border border-transparent"
+                ? "bg-brand-50 text-brand-600 border-brand-200"
+                : "text-slate-500 hover:text-slate-900 border-transparent hover:bg-slate-50"
             }`}
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -71,17 +71,17 @@ export default async function AdminParcelsPage({
       <div className="space-y-4">
         {!parcels || parcels.length === 0 ? (
           <div className="card p-8 text-center">
-            <p className="text-slate-400">No parcels found.</p>
+            <p className="text-slate-500">No parcels found.</p>
           </div>
         ) : (
           parcels.map((parcel) => (
             <div key={parcel.id} className="card p-5">
               <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
                 <div>
-                  <p className="font-mono text-white font-semibold">
+                  <p className="font-mono text-slate-900 font-semibold">
                     {parcel.local_tracking_number}
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {(parcel.profiles as { full_name: string })?.full_name} ·{" "}
                     <span className="font-mono">
                       {(parcel.profiles as { warehouse_code: string })?.warehouse_code}
@@ -90,29 +90,29 @@ export default async function AdminParcelsPage({
                 </div>
                 <span className={`badge-${parcel.status}`}>{parcel.status}</span>
               </div>
-              <div className="text-sm text-slate-300 mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="text-sm text-slate-700 mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div>
                   <span className="text-slate-500 text-xs">Supplier</span>
-                  <p>{parcel.supplier_name ?? "—"}</p>
+                  <p className="font-medium text-slate-800">{parcel.supplier_name ?? "—"}</p>
                 </div>
                 <div>
                   <span className="text-slate-500 text-xs">Description</span>
-                  <p className="truncate">{parcel.item_description ?? "—"}</p>
+                  <p className="truncate font-medium text-slate-800">{parcel.item_description ?? "—"}</p>
                 </div>
                 <div>
                   <span className="text-slate-500 text-xs">Qty</span>
-                  <p>{parcel.quantity}</p>
+                  <p className="font-medium text-slate-800">{parcel.quantity}</p>
                 </div>
                 <div>
                   <span className="text-slate-500 text-xs">Value</span>
-                  <p>{parcel.declared_value ? `$${parcel.declared_value}` : "—"}</p>
+                  <p className="font-medium text-slate-800">{parcel.declared_value ? `$${parcel.declared_value}` : "—"}</p>
                 </div>
               </div>
               {parcel.status === "pending" && (
                 <MarkArrivedForm parcel={parcel} />
               )}
               {parcel.status === "arrived" && parcel.weight_kg && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   {parcel.weight_kg}kg · {parcel.dimensions ?? "No dimensions"} · Arrived{" "}
                   {parcel.arrived_at ? new Date(parcel.arrived_at).toLocaleDateString() : "—"}
                 </p>

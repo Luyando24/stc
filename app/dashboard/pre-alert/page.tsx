@@ -58,8 +58,8 @@ export default function PreAlertPage() {
           <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
             <Package className="w-7 h-7 text-emerald-400" />
           </div>
-          <h2 className="text-xl font-display font-bold text-white mb-2">Pre-alert submitted!</h2>
-          <p className="text-slate-400 text-sm mb-6">
+          <h2 className="text-xl font-display font-bold text-slate-900 mb-2">Pre-alert submitted!</h2>
+          <p className="text-slate-500 text-sm mb-6">
             We&apos;ve registered your parcel. Once it arrives at our China warehouse, 
             we&apos;ll update its status to &quot;Arrived&quot;.
           </p>
@@ -82,17 +82,17 @@ export default function PreAlertPage() {
   return (
     <div className="max-w-lg">
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-white">Submit Pre-Alert</h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <h1 className="text-2xl font-display font-bold text-slate-900">Submit Pre-Alert</h1>
+        <p className="text-slate-500 text-sm mt-1">
           Tell us about a parcel your supplier has dispatched to our China warehouse.
         </p>
       </div>
 
       <div className="card p-6">
         {/* Info banner */}
-        <div className="flex gap-3 p-3 rounded-lg bg-brand-500/10 border border-brand-500/20 mb-6">
-          <AlertTriangle className="w-4 h-4 text-brand-400 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-brand-300">
+        <div className="flex gap-3 p-3 rounded-lg bg-brand-50 border border-brand-100 mb-6">
+          <AlertTriangle className="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-brand-700">
             Make sure your supplier has written your warehouse code on the parcel or given it to the courier.
           </p>
         </div>

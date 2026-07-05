@@ -87,11 +87,10 @@ export default function NewShipmentPage() {
     );
   }
 
-  return (
-    <div className="max-w-2xl">
+  return (    <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-white">Request Shipment</h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <h1 className="text-2xl font-display font-bold text-slate-900">Request Shipment</h1>
+        <p className="text-slate-500 text-sm mt-1">
           Select arrived parcels to ship together to Africa.
         </p>
       </div>
@@ -99,13 +98,13 @@ export default function NewShipmentPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Parcel selection */}
         <div className="card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4">
+          <h2 className="text-sm font-semibold text-slate-900 mb-4">
             Select Parcels ({selectedParcels.length} selected)
           </h2>
           {arrivedParcels.length === 0 ? (
             <div className="text-center py-8">
-              <Package className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              <p className="text-slate-400 text-sm">No parcels marked as arrived yet.</p>
+              <Package className="w-8 h-8 text-slate-450 mx-auto mb-2" />
+              <p className="text-slate-550 text-sm">No parcels marked as arrived yet.</p>
               <p className="text-slate-500 text-xs mt-1">
                 Wait for warehouse staff to confirm receipt.
               </p>
@@ -121,23 +120,23 @@ export default function NewShipmentPage() {
                     onClick={() => toggleParcel(parcel.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                       selected
-                        ? "border-brand-500/50 bg-brand-500/10"
-                        : "border-white/8 bg-white/3 hover:bg-white/6"
+                        ? "border-brand-500/50 bg-brand-50"
+                        : "border-slate-200 bg-white hover:bg-slate-50"
                     }`}
                   >
                     {selected ? (
-                      <CheckSquare className="w-4 h-4 text-brand-400 flex-shrink-0" />
+                      <CheckSquare className="w-4 h-4 text-brand-600 flex-shrink-0" />
                     ) : (
-                      <Square className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                      <Square className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-mono text-white">{parcel.local_tracking_number}</p>
-                      <p className="text-xs text-slate-400 truncate">
+                      <p className="text-sm font-mono text-slate-900">{parcel.local_tracking_number}</p>
+                      <p className="text-xs text-slate-500 truncate">
                         {parcel.item_description ?? "No description"} · Qty: {parcel.quantity}
                       </p>
                     </div>
                     {parcel.weight_kg && (
-                      <span className="text-xs text-slate-400">{parcel.weight_kg}kg</span>
+                      <span className="text-xs text-slate-500">{parcel.weight_kg}kg</span>
                     )}
                   </button>
                 );
@@ -148,7 +147,7 @@ export default function NewShipmentPage() {
 
         {/* Shipment mode */}
         <div className="card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4">Freight Mode</h2>
+          <h2 className="text-sm font-semibold text-slate-900 mb-4">Freight Mode</h2>
           <div className="grid grid-cols-2 gap-3">
             {(["sea", "air"] as const).map((m) => (
               <button
@@ -157,20 +156,20 @@ export default function NewShipmentPage() {
                 onClick={() => setMode(m)}
                 className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
                   mode === m
-                    ? "border-brand-500/50 bg-brand-500/10"
-                    : "border-white/8 bg-white/3 hover:bg-white/6"
+                    ? "border-brand-500/50 bg-brand-50"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
                 }`}
               >
                 {m === "sea" ? (
-                  <Ship className={`w-5 h-5 ${mode === m ? "text-brand-400" : "text-slate-400"}`} />
+                  <Ship className={`w-5 h-5 ${mode === m ? "text-brand-600" : "text-slate-500"}`} />
                 ) : (
-                  <Plane className={`w-5 h-5 ${mode === m ? "text-brand-400" : "text-slate-400"}`} />
+                  <Plane className={`w-5 h-5 ${mode === m ? "text-brand-600" : "text-slate-500"}`} />
                 )}
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-slate-900">
                     {m === "sea" ? "Sea Freight" : "Air Freight"}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     {m === "sea" ? "25–40 days · Cheaper" : "7–12 days · Faster"}
                   </p>
                 </div>
@@ -181,7 +180,7 @@ export default function NewShipmentPage() {
 
         {/* Destination */}
         <div className="card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4">Destination Country</h2>
+          <h2 className="text-sm font-semibold text-slate-900 mb-4">Destination Country</h2>try</h2>
           <select
             value={destination}
             onChange={(e) => setDestination(e.target.value)}

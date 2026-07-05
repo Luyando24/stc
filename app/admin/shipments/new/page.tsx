@@ -83,32 +83,32 @@ export default function AdminNewShipmentPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-white">Build Shipment</h1>
-        <p className="text-slate-400 text-sm mt-1">Consolidate arrived parcels into a new shipment.</p>
+        <h1 className="text-2xl font-display font-bold text-slate-900">Build Shipment</h1>
+        <p className="text-slate-500 text-sm mt-1">Consolidate arrived parcels into a new shipment.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Parcel selection */}
         <div className="card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4">Select Arrived Parcels ({selectedParcels.length})</h2>
+          <h2 className="text-sm font-semibold text-slate-900 mb-4">Select Arrived Parcels ({selectedParcels.length})</h2>
           {arrivedParcels.length === 0 ? (
-            <p className="text-slate-400 text-sm py-4 text-center">No arrived parcels available.</p>
+            <p className="text-slate-500 text-sm py-4 text-center">No arrived parcels available.</p>
           ) : (
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {arrivedParcels.map((p) => {
                 const selected = selectedParcels.includes(p.id);
                 return (
                   <button key={p.id} type="button" onClick={() => toggleParcel(p.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${selected ? "border-brand-500/50 bg-brand-500/10" : "border-white/8 bg-white/3 hover:bg-white/6"}`}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${selected ? "border-brand-500/50 bg-brand-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
                   >
-                    {selected ? <CheckSquare className="w-4 h-4 text-brand-400 flex-shrink-0" /> : <Square className="w-4 h-4 text-slate-500 flex-shrink-0" />}
+                    {selected ? <CheckSquare className="w-4 h-4 text-brand-600 flex-shrink-0" /> : <Square className="w-4 h-4 text-slate-400 flex-shrink-0" />}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-mono text-white">{p.local_tracking_number}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-sm font-mono text-slate-900 font-medium">{p.local_tracking_number}</p>
+                      <p className="text-xs text-slate-500">
                         {p.profiles?.full_name} · <span className="font-mono">{p.profiles?.warehouse_code}</span> · {p.item_description ?? "No desc"} · Qty {p.quantity}
                       </p>
                     </div>
-                    {p.weight_kg && <span className="text-xs text-slate-400">{p.weight_kg}kg</span>}
+                    {p.weight_kg && <span className="text-xs text-slate-500">{p.weight_kg}kg</span>}
                   </button>
                 );
               })}
@@ -119,14 +119,14 @@ export default function AdminNewShipmentPage() {
         {/* Mode + destination */}
         <div className="card p-5 space-y-4">
           <div>
-            <h2 className="text-sm font-semibold text-white mb-3">Freight Mode</h2>
+            <h2 className="text-sm font-semibold text-slate-900 mb-3">Freight Mode</h2>
             <div className="grid grid-cols-2 gap-3">
               {(["sea", "air"] as const).map((m) => (
                 <button key={m} type="button" onClick={() => setMode(m)}
-                  className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${mode === m ? "border-brand-500/50 bg-brand-500/10" : "border-white/8 bg-white/3"}`}
+                  className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${mode === m ? "border-brand-500/50 bg-brand-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}
                 >
-                  {m === "sea" ? <Ship className="w-4 h-4 text-brand-400" /> : <Plane className="w-4 h-4 text-brand-400" />}
-                  <span className="text-sm text-white">{m === "sea" ? "Sea Freight" : "Air Freight"}</span>
+                  {m === "sea" ? <Ship className="w-4 h-4 text-brand-600" /> : <Plane className="w-4 h-4 text-brand-600" />}
+                  <span className="text-sm text-slate-800 font-semibold">{m === "sea" ? "Sea Freight" : "Air Freight"}</span>
                 </button>
               ))}
             </div>
@@ -153,8 +153,8 @@ export default function AdminNewShipmentPage() {
         {/* Maersk references (sea only) */}
         {mode === "sea" && (
           <div className="card p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-white">Maersk References (optional)</h2>
-            <p className="text-xs text-slate-400">Fill in whichever reference you have from the Maersk booking.</p>
+            <h2 className="text-sm font-semibold text-slate-900">Maersk References (optional)</h2>
+            <p className="text-xs text-slate-500">Fill in whichever reference you have from the Maersk booking.</p>
             <div>
               <label className="label">Carrier Booking Reference</label>
               <input type="text" value={maerskRef.booking} onChange={(e) => setMaerskRef((p) => ({ ...p, booking: e.target.value }))} className="input font-mono text-sm" placeholder="e.g. 123456789" />

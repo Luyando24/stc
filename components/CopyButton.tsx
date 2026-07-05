@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
-export function CopyButton({ text }: { text: string }) {
+export function CopyButton({ text, label = "Copy code" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -31,7 +31,7 @@ export function CopyButton({ text }: { text: string }) {
       ) : (
         <>
           <Copy className="w-4 h-4" />
-          <span>Copy code</span>
+          <span>{label}</span>
         </>
       )}
     </button>
