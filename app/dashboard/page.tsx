@@ -158,7 +158,7 @@ export default async function DashboardPage() {
             <Plane className="w-5 h-5 text-accent-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-900">Request Shipment</p>
+            <p className="font-semibold text-slate-900">Ship Parcel</p>
             <p className="text-slate-500 text-sm">
               Ship arrived parcels to Africa
             </p>

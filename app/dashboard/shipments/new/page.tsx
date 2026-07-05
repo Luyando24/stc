@@ -105,9 +105,9 @@ export default function NewShipmentPage() {
 
   return (    <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-slate-900">Request Shipment</h1>
+        <h1 className="text-2xl font-display font-bold text-slate-900">Ship Parcel</h1>
         <p className="text-slate-500 text-sm mt-1">
-          Select arrived parcels to ship together to Africa.
+          Select arrived parcels to ship to your delivery address.
         </p>
       </div>
 
@@ -273,9 +273,9 @@ export default function NewShipmentPage() {
           className="btn-primary w-full justify-center"
         >
           {loading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Submitting request…</>
+            <><Loader2 className="w-4 h-4 animate-spin" /> Processing shipment...</>
           ) : (
-            <>Submit Shipment Request</>
+            <>Ship Parcel</>
           )}
         </button>
       </form>
