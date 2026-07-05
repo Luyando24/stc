@@ -27,8 +27,8 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/address", label: "China Warehouse", icon: Building },
   { href: "/dashboard/receiver-addresses", label: "Receiver Addresses", icon: MapPin },
-  { href: "/dashboard/parcels", label: "My Parcels", icon: Package },
-  { href: "/dashboard/shipments", label: "My Orders", icon: ClipboardList },
+  { href: "/dashboard/parcels", label: "Pending Parcels", icon: Package },
+  { href: "/dashboard/shipments", label: "All Shipments", icon: Plane },
 ];
 
 export default function DashboardNav({ profile }: { profile: Profile | null }) {
@@ -176,16 +176,16 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
             <span className="text-[10px] font-medium">Overview</span>
           </Link>
 
-          {/* Parcels */}
+          {/* Pending Parcels */}
           <Link
             href="/dashboard/parcels"
             className={clsx(
               "flex flex-col items-center gap-1 p-1.5 transition-colors",
-              pathname.startsWith("/dashboard/parcels") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
+              pathname.startsWith("/dashboard/parcels") ? "text-brand-600" : "text-slate-500 hover:text-slate-955"
             )}
           >
             <Package className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Parcels</span>
+            <span className="text-[10px] font-medium">Pending</span>
           </Link>
 
           {/* Center float: Ship Now */}
@@ -199,7 +199,7 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
             </Link>
           </div>
 
-          {/* My Orders */}
+          {/* All Shipments */}
           <Link
             href="/dashboard/shipments"
             className={clsx(
@@ -207,8 +207,8 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
               pathname.startsWith("/dashboard/shipments") ? "text-brand-600" : "text-slate-500 hover:text-slate-950"
             )}
           >
-            <ClipboardList className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Orders</span>
+            <Plane className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Shipments</span>
           </Link>
 
           {/* Address */}

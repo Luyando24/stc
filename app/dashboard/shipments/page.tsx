@@ -18,8 +18,8 @@ export default async function ShipmentsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-bold text-slate-900">My Orders</h1>
-          <p className="text-slate-500 text-sm mt-1">Track all your international orders</p>
+          <h1 className="text-2xl font-display font-bold text-slate-900">All Shipments</h1>
+          <p className="text-slate-500 text-sm mt-1">Track all your international shipments</p>
         </div>
         <Link href="/dashboard/ship" className="btn-primary">
           <Plus className="w-4 h-4" /> Ship Parcel

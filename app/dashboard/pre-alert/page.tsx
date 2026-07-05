@@ -71,7 +71,7 @@ export default function PreAlertPage() {
               Add another
             </button>
             <button onClick={() => router.push("/dashboard/parcels")} className="btn-primary">
-              View my parcels
+              View pending parcels
             </button>
           </div>
         </div>
