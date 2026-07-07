@@ -7,26 +7,26 @@ import {
   Ship,
   Copy,
   Search,
-  FileText,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-  TrendingUp,
 } from "lucide-react";
-import { Parcel } from "@/lib/types";
+import { Parcel, ParcelStatus } from "@/lib/types";
+
+export type ClientParcelStatus = ParcelStatus | "delivered";
+
+export interface ClientParcel extends Omit<Parcel, "status"> {
+  status: ClientParcelStatus;
+}
 
 interface MyParcelsClientProps {
-  parcels: Parcel[];
+  parcels: ClientParcel[];
   profileCountry: string | null;
 }
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pending Arrival",
   arrived: "Arrived at Warehouse",
-  flagged: "Flagged (Action Required)",
-  consolidated: "Consolidated",
-  cancelled: "Cancelled",
+  flagged: "Awaiting Shipping",
+  consolidated: "Shipped Out",
+  delivered: "Delivered",
 };
 
 export default function MyParcelsClient({ parcels, profileCountry }: MyParcelsClientProps) {
@@ -47,40 +47,44 @@ export default function MyParcelsClient({ parcels, profileCountry }: MyParcelsCl
     p.local_tracking_number.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Tab calculations based on actual statuses
-  const pending = searchedParcels.filter((p) => p.status === "pending");
+  // Tab calculations based on actual statuses and details
+  const awaitingInfo = searchedParcels.filter(
+    (p) => p.status === "arrived" && (!p.item_description || !p.declared_value)
+  );
   const arrived = searchedParcels.filter((p) => p.status === "arrived");
-  const flagged = searchedParcels.filter((p) => p.status === "flagged");
-  const consolidated = searchedParcels.filter((p) => p.status === "consolidated");
-  const cancelled = searchedParcels.filter((p) => p.status === "cancelled");
+  const awaitingShipping = searchedParcels.filter(
+    (p) => p.status === "arrived" && p.item_description && p.declared_value
+  );
+  const shippedOut = searchedParcels.filter((p) => p.status === "consolidated");
+  const delivered = searchedParcels.filter((p) => p.status === "delivered");
   
   // Filter by tab
   let displayedParcels = searchedParcels;
-  if (activeTab === "pending") displayedParcels = pending;
+  if (activeTab === "awaiting_info") displayedParcels = awaitingInfo;
   else if (activeTab === "arrived") displayedParcels = arrived;
-  else if (activeTab === "flagged") displayedParcels = flagged;
-  else if (activeTab === "consolidated") displayedParcels = consolidated;
-  else if (activeTab === "cancelled") displayedParcels = cancelled;
+  else if (activeTab === "awaiting_shipping") displayedParcels = awaitingShipping;
+  else if (activeTab === "shipped_out") displayedParcels = shippedOut;
+  else if (activeTab === "delivered") displayedParcels = delivered;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-slate-900">Pending Parcels</h1>
+        <h1 className="text-2xl font-display font-bold text-slate-900">All parcels</h1>
         <p className="text-slate-500 text-sm mt-1">
           All parcels registered to your delivery code at our China warehouse.
         </p>
       </div>
 
-      {/* Tabs Row (Aligned to our database statuses) */}
+      {/* Tabs Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 bg-[#f4f5f6] p-1.5 rounded-2xl border border-slate-100">
         {[
           { id: "all", count: searchedParcels.length, label: "All Parcels" },
-          { id: "pending", count: pending.length, label: "Pending Arrival" },
+          { id: "awaiting_info", count: awaitingInfo.length, label: "Awaiting Info" },
           { id: "arrived", count: arrived.length, label: "Arrived" },
-          { id: "flagged", count: flagged.length, label: "Flagged" },
-          { id: "consolidated", count: consolidated.length, label: "Consolidated" },
-          { id: "cancelled", count: cancelled.length, label: "Cancelled" },
+          { id: "awaiting_shipping", count: awaitingShipping.length, label: "Awaiting Shipping" },
+          { id: "shipped_out", count: shippedOut.length, label: "Shipped Out" },
+          { id: "delivered", count: delivered.length, label: "Delivered" },
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -142,15 +146,21 @@ export default function MyParcelsClient({ parcels, profileCountry }: MyParcelsCl
                     <span className="text-brand-600">{profileCountry ? profileCountry.toUpperCase() : "Destination"}</span>
                   </h4>
                   <p className={`text-xs font-semibold mt-1 ${
-                    parcel.status === "arrived"
+                    parcel.status === "delivered"
                       ? "text-emerald-650"
-                      : parcel.status === "flagged"
-                      ? "text-amber-650"
-                      : parcel.status === "cancelled"
-                      ? "text-red-650"
-                      : "text-blue-650"
+                      : parcel.status === "arrived"
+                      ? (!parcel.item_description || !parcel.declared_value ? "text-amber-650" : "text-emerald-650")
+                      : parcel.status === "consolidated"
+                      ? "text-blue-650"
+                      : "text-slate-500"
                   }`}>
-                    {STATUS_LABELS[parcel.status] || "Pending arrival"}
+                    {parcel.status === "consolidated"
+                      ? "Shipped Out"
+                      : parcel.status === "delivered"
+                      ? "Delivered"
+                      : parcel.status === "arrived"
+                      ? (!parcel.item_description || !parcel.declared_value ? "Awaiting Info" : "Awaiting Shipping")
+                      : STATUS_LABELS[parcel.status] || parcel.status}
                   </p>
                   <p className="text-[10px] text-slate-450 mt-1">
                     {new Date(parcel.created_at).toLocaleDateString("en-US", {

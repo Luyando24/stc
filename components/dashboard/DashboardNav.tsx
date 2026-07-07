@@ -23,8 +23,8 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/address", label: "China Warehouse", icon: Building },
   { href: "/dashboard/receiver-addresses", label: "Receiver Addresses", icon: MapPin },
-  { href: "/dashboard/parcels", label: "Pending Parcels", icon: Package },
-  { href: "/dashboard/shipments", label: "All Shipments", icon: Plane },
+  { href: "/dashboard/parcels", label: "All orders", icon: Package },
+  { href: "/dashboard/shipments", label: "In transit", icon: Plane },
   { href: "/dashboard/delivered", label: "Delivered", icon: CheckCircle },
 ];
 
@@ -172,7 +172,7 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
             )}
           >
             <Package className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Pending</span>
+            <span className="text-[10px] font-medium">All orders</span>
           </Link>
 
           {/* Center float: Ship Now */}
@@ -195,7 +195,7 @@ export default function DashboardNav({ profile }: { profile: Profile | null }) {
             )}
           >
             <Plane className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Shipments</span>
+            <span className="text-[10px] font-medium">In transit</span>
           </Link>
 
           {/* Delivered */}
