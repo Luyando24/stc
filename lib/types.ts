@@ -33,6 +33,10 @@ export interface Parcel {
   arrived_at: string | null;
   notes: string | null;
   created_at: string;
+  submitted_for_shipping?: boolean;
+  shipping_mode?: "air" | "sea" | null;
+  receiver_address_id?: string | null;
+  shipping_cost?: number | null;
 }
 
 export type ShipmentStatus =

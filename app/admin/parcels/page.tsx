@@ -136,7 +136,7 @@ export default async function AdminParcelsPage({
                     : parcel.status}
                 </span>
               </div>
-              <div className="text-sm text-slate-700 mb-3 grid grid-cols-2 sm:grid-cols-6 gap-2">
+               <div className="text-sm text-slate-700 mb-3 grid grid-cols-2 sm:grid-cols-7 gap-2">
                 <div>
                   <span className="text-slate-500 text-xs">Supplier</span>
                   <p className="font-medium text-slate-800">{parcel.supplier_name ?? "—"}</p>
@@ -160,6 +160,10 @@ export default async function AdminParcelsPage({
                 <div>
                   <span className="text-slate-500 text-xs">Dimensions</span>
                   <p className="font-medium text-slate-800">{parcel.dimensions ?? "—"}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500 text-xs">Est. Cost</span>
+                  <p className="font-bold text-emerald-650">{parcel.shipping_cost ? `$${Number(parcel.shipping_cost).toFixed(2)}` : "—"}</p>
                 </div>
               </div>
               {parcel.status === "pending" && (

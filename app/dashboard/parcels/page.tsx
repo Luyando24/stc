@@ -56,14 +56,33 @@ export default async function ParcelsPage() {
     .eq("customer_id", user.id)
     .order("created_at", { ascending: false });
 
+  // Fetch pricing settings and calculate costs
+  const { getPricingSettings } = require("@/lib/pricing-server");
+  const { calculateShippingCost } = require("@/lib/pricing");
+  const pricingSettings = await getPricingSettings();
+
   // Override status to "delivered" if the parcel is linked to a delivered shipment, and add international tracking number + shipment ID
   const mappedParcels = (parcels || []).map((parcel) => {
     const sInfo = parcelShipmentMap.get(parcel.id);
+    const pricing = calculateShippingCost(
+      {
+        weight_kg: parcel.weight_kg,
+        dimensions: parcel.dimensions,
+        shipping_mode: parcel.shipping_mode,
+        declared_value: parcel.declared_value,
+        supplier_name: parcel.supplier_name,
+        item_description: parcel.item_description,
+      },
+      pricingSettings
+    );
+
     return {
       ...parcel,
       status: sInfo?.status === "delivered" ? ("delivered" as const) : parcel.status,
       stc_tracking_number: sInfo?.stc_tracking_number || null,
       shipment_id: sInfo?.shipment_id || null,
+      estimated_shipping_cost: (parcel.weight_kg || parcel.dimensions) ? pricing.finalPriceUsd : null,
+      pricing_details: pricing,
     };
   });
 
@@ -72,6 +91,7 @@ export default async function ParcelsPage() {
       parcels={mappedParcels}
       profileCountry={profile?.country || "LUSAKA"}
       receiverAddresses={receiverAddresses || []}
+      pricingSettings={pricingSettings}
     />
   );
 }

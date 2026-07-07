@@ -71,6 +71,22 @@ function AdminNewShipmentForm() {
       });
   }, []);
 
+  // Auto-calculate combined freight cost
+  useEffect(() => {
+    const selected = arrivedParcels.filter((p) => selectedParcels.includes(p.id));
+    let total = 0;
+    selected.forEach((p) => {
+      if (p.shipping_cost) {
+        total += Number(p.shipping_cost);
+      }
+    });
+    if (total > 0) {
+      setFreightCost(total.toFixed(2));
+    } else {
+      setFreightCost("");
+    }
+  }, [selectedParcels, arrivedParcels]);
+
   function toggleParcel(id: string) {
     setSelectedParcels((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]

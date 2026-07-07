@@ -38,7 +38,7 @@ export async function PATCH(
   // Validate ownership
   const { data: parcel, error: checkError } = await supabase
     .from("parcels")
-    .select("customer_id, item_description, quantity, declared_value, shipping_mode, receiver_address_id")
+    .select("customer_id, item_description, quantity, declared_value, shipping_mode, receiver_address_id, weight_kg, dimensions, supplier_name")
     .eq("id", id)
     .single();
 
@@ -74,6 +74,30 @@ export async function PATCH(
   if (shipping_mode !== undefined) updatePayload.shipping_mode = shipping_mode;
   if (receiver_address_id !== undefined) updatePayload.receiver_address_id = receiver_address_id;
   if (submitted_for_shipping !== undefined) updatePayload.submitted_for_shipping = submitted_for_shipping;
+
+  // Auto-calculate shipping cost if physical measurements are present
+  const finalMode = shipping_mode ?? parcel.shipping_mode;
+  const finalWeight = parcel.weight_kg;
+  const finalDimensions = parcel.dimensions;
+  const finalValue = declared_value ?? parcel.declared_value;
+
+  if (finalMode && (finalWeight || finalDimensions)) {
+    const { getPricingSettings } = require("@/lib/pricing-server");
+    const { calculateShippingCost } = require("@/lib/pricing");
+    const pricingSettings = await getPricingSettings();
+    const pricing = calculateShippingCost(
+      {
+        weight_kg: finalWeight,
+        dimensions: finalDimensions,
+        shipping_mode: finalMode,
+        declared_value: finalValue,
+        supplier_name: parcel.supplier_name,
+        item_description: item_description ?? parcel.item_description,
+      },
+      pricingSettings
+    );
+    updatePayload.shipping_cost = pricing.finalPriceUsd;
+  }
 
   // Update
   const { data: updatedData, error: updateError } = await supabase

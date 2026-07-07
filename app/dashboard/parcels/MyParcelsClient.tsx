@@ -23,12 +23,17 @@ export interface ClientParcel extends Omit<Parcel, "status"> {
   submitted_for_shipping?: boolean;
   shipping_mode?: "air" | "sea" | null;
   receiver_address_id?: string | null;
+  estimated_shipping_cost?: number | null;
+  pricing_details?: any;
 }
+
+import { PricingSettings, calculateShippingCost } from "@/lib/pricing";
 
 interface MyParcelsClientProps {
   parcels: ClientParcel[];
   profileCountry: string | null;
   receiverAddresses: any[];
+  pricingSettings: PricingSettings;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -39,7 +44,12 @@ const STATUS_LABELS: Record<string, string> = {
   delivered: "Delivered",
 };
 
-export default function MyParcelsClient({ parcels, profileCountry, receiverAddresses }: MyParcelsClientProps) {
+export default function MyParcelsClient({
+  parcels,
+  profileCountry,
+  receiverAddresses,
+  pricingSettings,
+}: MyParcelsClientProps) {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -156,6 +166,32 @@ export default function MyParcelsClient({ parcels, profileCountry, receiverAddre
   else if (activeTab === "processing") displayedParcels = processing;
   else if (activeTab === "shipped_out") displayedParcels = shippedOut;
   else if (activeTab === "delivered") displayedParcels = delivered;
+
+  // Dynamically calculate the combined cost inside the modal
+  let modalTotalCost = 0;
+  let modalValuationFee = 0;
+  let modalFreightCost = 0;
+  const modalRulesAppliedSet = new Set<string>();
+
+  if (submitModalOpen && submittingParcels.length > 0) {
+    for (const p of submittingParcels) {
+      const calculation = calculateShippingCost(
+        {
+          weight_kg: p.weight_kg,
+          dimensions: p.dimensions,
+          shipping_mode: shippingMode,
+          declared_value: p.declared_value,
+          supplier_name: p.supplier_name,
+          item_description: p.item_description,
+        },
+        pricingSettings
+      );
+      modalTotalCost += calculation.finalPriceUsd;
+      modalValuationFee += calculation.valuationFee;
+      modalFreightCost += calculation.freightCost;
+      calculation.rulesApplied.forEach((r) => modalRulesAppliedSet.add(r));
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -358,10 +394,18 @@ export default function MyParcelsClient({ parcels, profileCountry, receiverAddre
                   </p>
                   <p className="flex items-center sm:justify-end gap-1">
                     <span>Declared Value:</span>
-                    <span className="font-bold text-brand-600 text-sm">
+                    <span className="font-bold text-brand-600">
                       {parcel.declared_value ? `¥${parcel.declared_value}` : "—"}
                     </span>
                   </p>
+                  <div className="pt-1 border-t border-slate-100 mt-1">
+                    <p className="text-[10px] text-slate-400 font-medium sm:text-right">Est. Shipping Cost</p>
+                    <p className="font-extrabold text-emerald-650 text-xs sm:text-right">
+                      {parcel.estimated_shipping_cost !== null && parcel.estimated_shipping_cost !== undefined
+                        ? `$${parcel.estimated_shipping_cost.toFixed(2)} USD`
+                        : "Awaiting measurement"}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full sm:w-auto">
@@ -521,6 +565,30 @@ export default function MyParcelsClient({ parcels, profileCountry, receiverAddre
                     </div>
                   );
                 })()}
+
+                {/* 3. Cost Preview */}
+                <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4 space-y-2 text-xs font-sans">
+                  <h4 className="font-bold text-emerald-800 uppercase tracking-wider text-[10px]">Estimated Shipping Cost (USD)</h4>
+                  <div className="flex justify-between text-slate-650">
+                    <span>Freight Cost ({shippingMode === "air" ? "Air" : "Sea"}):</span>
+                    <span>${modalFreightCost.toFixed(2)} USD</span>
+                  </div>
+                  {modalValuationFee > 0 && (
+                    <div className="flex justify-between text-slate-650">
+                      <span>Valuation Surcharge:</span>
+                      <span>${modalValuationFee.toFixed(2)} USD</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-slate-800 font-bold border-t border-emerald-100 pt-2 text-sm">
+                    <span>Total Estimated:</span>
+                    <span className="text-emerald-700">${modalTotalCost.toFixed(2)} USD</span>
+                  </div>
+                  {modalRulesAppliedSet.size > 0 && (
+                    <div className="text-[10px] text-emerald-600 mt-1 border-t border-emerald-100/50 pt-1 leading-relaxed">
+                      Rules Applied: {Array.from(modalRulesAppliedSet).join(", ")}
+                    </div>
+                  )}
+                </div>
 
                 {submitError && (
                   <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-650 text-xs flex gap-2 font-sans">

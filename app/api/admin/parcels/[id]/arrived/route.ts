@@ -41,7 +41,7 @@ export async function PATCH(
   // Fetch parcel info with customer profile for notification
   const { data: parcelData } = await supabase
     .from("parcels")
-    .select("local_tracking_number, customer_id")
+    .select("local_tracking_number, customer_id, shipping_mode, declared_value, supplier_name, item_description")
     .eq("id", id)
     .single();
 
@@ -67,6 +67,31 @@ export async function PATCH(
     }
   }
 
+  // Calculate pricing if details exist
+  const weight = parsed.data.weight_kg ?? null;
+  const dimensions = parsed.data.dimensions ?? null;
+  const mode = parcelData?.shipping_mode ?? null;
+  const value = parcelData?.declared_value ?? null;
+
+  let shippingCost = null;
+  if (mode && (weight || dimensions)) {
+    const { getPricingSettings } = require("@/lib/pricing-server");
+    const { calculateShippingCost } = require("@/lib/pricing");
+    const pricingSettings = await getPricingSettings();
+    const pricing = calculateShippingCost(
+      {
+        weight_kg: weight,
+        dimensions: dimensions,
+        shipping_mode: mode as any,
+        declared_value: value,
+        supplier_name: parcelData?.supplier_name,
+        item_description: parcelData?.item_description,
+      },
+      pricingSettings
+    );
+    shippingCost = pricing.finalPriceUsd;
+  }
+
   const { error } = await supabase
     .from("parcels")
     .update({
@@ -75,6 +100,7 @@ export async function PATCH(
       weight_kg: parsed.data.weight_kg ?? null,
       dimensions: parsed.data.dimensions ?? null,
       notes: parsed.data.notes ?? null,
+      shipping_cost: shippingCost,
     })
     .eq("id", id);
 
