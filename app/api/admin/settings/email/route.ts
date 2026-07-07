@@ -7,6 +7,7 @@ const SettingsSchema = z.object({
   action: z.enum(["save", "test"]),
   resend_api_key: z.string().optional(),
   resend_from_email: z.string().email().optional(),
+  admin_notification_email: z.string().email().optional(),
   test_recipient: z.string().email().optional(),
 });
 
@@ -40,9 +41,11 @@ export async function GET(request: NextRequest) {
 
   const apiKeyRow = dbSettings?.find((r) => r.key === "resend_api_key");
   const fromEmailRow = dbSettings?.find((r) => r.key === "resend_from_email");
+  const adminEmailRow = dbSettings?.find((r) => r.key === "admin_notification_email");
 
   const rawApiKey = apiKeyRow?.value ?? "";
   const fromEmail = fromEmailRow?.value ?? "";
+  const adminNotificationEmail = adminEmailRow?.value ?? "admin@stclogistics.com";
 
   // Mask the API Key
   let maskedApiKey = "";
@@ -59,6 +62,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     resend_api_key: maskedApiKey,
     resend_from_email: fromEmail,
+    admin_notification_email: adminNotificationEmail,
   });
 }
 
@@ -89,7 +93,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid parameters", details: parsed.error.format() }, { status: 400 });
     }
 
-    const { action, resend_api_key, resend_from_email, test_recipient } = parsed.data;
+    const { action, resend_api_key, resend_from_email, admin_notification_email, test_recipient } = parsed.data;
 
     if (action === "save") {
       // 1. Update from_email if provided
@@ -117,6 +121,17 @@ export async function POST(request: NextRequest) {
           if (err2) {
             return NextResponse.json({ error: `Failed to save API key: ${err2.message}` }, { status: 500 });
           }
+        }
+      }
+
+      // 3. Update admin_notification_email if provided
+      if (admin_notification_email) {
+        const { error: err3 } = await supabase
+          .from("system_settings")
+          .upsert({ key: "admin_notification_email", value: admin_notification_email, description: "Email address to receive admin alerts for customer events" });
+
+        if (err3) {
+          return NextResponse.json({ error: `Failed to save admin notification email: ${err3.message}` }, { status: 500 });
         }
       }
 

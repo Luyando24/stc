@@ -25,6 +25,7 @@ export default function SettingsPage() {
   // Email settings states
   const [apiKey, setApiKey] = useState("");
   const [fromEmail, setFromEmail] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
   const [testRecipient, setTestRecipient] = useState("");
 
   // Pricing settings states
@@ -65,6 +66,7 @@ export default function SettingsPage() {
         const emailData = await emailRes.json();
         setApiKey(emailData.resend_api_key || "");
         setFromEmail(emailData.resend_from_email || "");
+        setAdminEmail(emailData.admin_notification_email || "");
       }
 
       // Fetch pricing settings
@@ -99,6 +101,7 @@ export default function SettingsPage() {
           action: "save",
           resend_api_key: apiKey,
           resend_from_email: fromEmail,
+          admin_notification_email: adminEmail,
         }),
       });
 
@@ -334,6 +337,24 @@ export default function SettingsPage() {
                   />
                   <p className="text-xs text-slate-500 mt-1">
                     This address must be domain-verified in your Resend account.
+                  </p>
+                </div>
+
+                {/* Admin Notification Recipient Email */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Admin Notification Recipient Email
+                  </label>
+                  <input
+                    type="email"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="admin@stclogistics.com"
+                    className="input text-sm w-full"
+                    required
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Receive alert emails for key customer events (e.g. registration, consolidated shipping submission).
                   </p>
                 </div>
 

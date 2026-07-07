@@ -15,9 +15,11 @@ export function getAppUrl() {
 export async function getEmailSettings() {
   const ENV_RESEND_API_KEY = process.env.RESEND_API_KEY;
   const ENV_FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "notifications@stclogistics.com";
+  const ENV_ADMIN_NOTIFICATION_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL ?? "admin@stclogistics.com";
 
   let apiKey = ENV_RESEND_API_KEY;
   let fromEmail = ENV_FROM_EMAIL;
+  let adminNotificationEmail = ENV_ADMIN_NOTIFICATION_EMAIL;
 
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co";
@@ -31,6 +33,7 @@ export async function getEmailSettings() {
     if (!error && dbSettings) {
       const apiKeyRow = dbSettings.find((r: any) => r.key === "resend_api_key");
       const fromEmailRow = dbSettings.find((r: any) => r.key === "resend_from_email");
+      const adminEmailRow = dbSettings.find((r: any) => r.key === "admin_notification_email");
 
       if (apiKeyRow && apiKeyRow.value && apiKeyRow.value !== "your_resend_api_key") {
         apiKey = apiKeyRow.value;
@@ -38,12 +41,15 @@ export async function getEmailSettings() {
       if (fromEmailRow && fromEmailRow.value && fromEmailRow.value !== "notifications@stclogistics.com") {
         fromEmail = fromEmailRow.value;
       }
+      if (adminEmailRow && adminEmailRow.value) {
+        adminNotificationEmail = adminEmailRow.value;
+      }
     }
   } catch (err) {
     console.error("Failed to fetch email settings from DB, using env variables:", err);
   }
 
-  return { apiKey, fromEmail };
+  return { apiKey, fromEmail, adminNotificationEmail };
 }
 
 interface SendEmailParams {
@@ -294,4 +300,167 @@ export async function notifyWelcome(
 
   return sendEmail({ to: email, subject, html });
 }
+
+export async function notifyAdminNewCustomerRegistered(
+  adminEmail: string,
+  customerName: string,
+  customerEmail: string,
+  warehouseCode: string,
+  country: string | null
+) {
+  const appUrl = getAppUrl();
+  const subject = `[STC Alert] New Customer Registered: ${customerName} (${warehouseCode})`;
+  
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+      <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid #3b82f6; padding-bottom: 16px;">
+        <h2 style="color: #1d4ed8; margin: 0;">New Customer Registration</h2>
+        <p style="font-size: 14px; color: #64748b; margin-top: 4px; margin-bottom: 0;">STC Logistics Admin Alert System</p>
+      </div>
+
+      <p style="font-size: 15px; margin-top: 0; color: #334155;">Hello Admin,</p>
+      <p style="font-size: 14px; color: #475569;">A new customer has successfully registered an account on the STC Logistics platform. Below are the account details:</p>
+
+      <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0; background-color: #f8fafc;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 500; width: 140px;">Full Name:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #0f172a;">${customerName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 500;">Email Address:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #0f172a;">${customerEmail}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 500;">Warehouse Code:</td>
+            <td style="padding: 6px 0; font-family: monospace; font-weight: bold; color: #1d4ed8; font-size: 16px;">${warehouseCode}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 500;">Destination Country:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #0f172a;">${country || "Not specified"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 500;">Registration Time:</td>
+            <td style="padding: 6px 0; color: #0f172a;">${new Date().toLocaleString()}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin: 28px 0; text-align: center;">
+        <a href="${appUrl}/admin/customers" style="background-color: #1d4ed8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.2);">Manage Customers</a>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+      <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">This is an automated system notification. Please do not reply directly to this email.</p>
+    </div>
+  `;
+
+  return sendEmail({ to: adminEmail, subject, html });
+}
+
+export async function notifyAdminNewParcelSubmission(
+  adminEmail: string,
+  customerName: string,
+  warehouseCode: string,
+  mode: "air" | "sea",
+  destination: string,
+  receiverName: string,
+  receiverPhone: string,
+  receiverAddress: string,
+  parcels: Array<{
+    local_tracking_number: string;
+    item_description: string | null;
+    quantity: number;
+    declared_value: number | null;
+    weight_kg: number | null;
+    dimensions: string | null;
+    shipping_cost: number | null;
+  }>,
+  totalCost: number
+) {
+  const appUrl = getAppUrl();
+  const subject = `[STC Alert] Combined Shipping Submission: ${customerName} (${warehouseCode})`;
+
+  const parcelsTableRows = parcels.map(p => `
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 10px 8px; font-family: monospace; font-size: 13px; color: #1e293b; font-weight: 500;">${p.local_tracking_number}</td>
+      <td style="padding: 10px 8px; color: #334155;">${p.item_description || "No description"}</td>
+      <td style="padding: 10px 8px; text-align: center; color: #334155;">${p.quantity}</td>
+      <td style="padding: 10px 8px; text-align: right; color: #334155;">${p.weight_kg ? `${p.weight_kg} kg` : "—"}</td>
+      <td style="padding: 10px 8px; text-align: right; color: #334155;">${p.declared_value ? `¥${p.declared_value}` : "—"}</td>
+      <td style="padding: 10px 8px; text-align: right; font-weight: bold; color: #10b981;">${p.shipping_cost ? `$${Number(p.shipping_cost).toFixed(2)}` : "—"}</td>
+    </tr>
+  `).join("");
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; color: #1e293b; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+      <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid #059669; padding-bottom: 16px;">
+        <h2 style="color: #059669; margin: 0;">New Shipping Request Received</h2>
+        <p style="font-size: 14px; color: #64748b; margin-top: 4px; margin-bottom: 0;">Consolidated Cargo Shipping Request</p>
+      </div>
+
+      <p style="font-size: 15px; margin-top: 0; color: #334155;">Hello Admin,</p>
+      <p style="font-size: 14px; color: #475569;">Customer <strong>${customerName} (${warehouseCode})</strong> has submitted a new consolidated shipping request for <strong>${parcels.length} parcel(s)</strong>.</p>
+
+      <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0; background-color: #f8fafc;">
+        <h3 style="margin-top: 0; color: #0f172a; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px;">Transit & Delivery Details</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 500; width: 150px;">Freight Mode:</td>
+            <td style="padding: 4px 0; font-weight: bold; color: #0f172a; text-transform: uppercase;">${mode} Freight</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 500;">Destination:</td>
+            <td style="padding: 4px 0; font-weight: bold; color: #0f172a;">${destination}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 500;">Receiver Name:</td>
+            <td style="padding: 4px 0; font-weight: bold; color: #0f172a;">${receiverName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 500;">Receiver Phone:</td>
+            <td style="padding: 4px 0; font-weight: bold; color: #0f172a;">${receiverPhone}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 500; vertical-align: top;">Receiver Address:</td>
+            <td style="padding: 4px 0; color: #334155; font-weight: 500; vertical-align: top;">${receiverAddress}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin: 24px 0;">
+        <h3 style="margin-top: 0; color: #0f172a; font-size: 14px; margin-bottom: 10px;">Consolidated Package List</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+          <thead>
+            <tr style="background-color: #f1f5f9; border-bottom: 1px solid #e2e8f0; text-align: left;">
+              <th style="padding: 10px 8px; font-weight: 600; color: #475569;">Tracking #</th>
+              <th style="padding: 10px 8px; font-weight: 600; color: #475569;">Description</th>
+              <th style="padding: 10px 8px; font-weight: 600; color: #475569; text-align: center;">Qty</th>
+              <th style="padding: 10px 8px; font-weight: 600; color: #475569; text-align: right;">Weight</th>
+              <th style="padding: 10px 8px; font-weight: 600; color: #475569; text-align: right;">Declared (¥)</th>
+              <th style="padding: 10px 8px; font-weight: 600; color: #475569; text-align: right;">Est. Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${parcelsTableRows}
+            <tr style="background-color: #fafafa; font-weight: bold; border-top: 2px solid #e2e8f0;">
+              <td colspan="5" style="padding: 12px 8px; text-align: right; color: #0f172a;">Combined Estimated Cost:</td>
+              <td style="padding: 12px 8px; text-align: right; color: #059669; font-size: 15px;">$${totalCost.toFixed(2)} USD</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin: 28px 0; text-align: center;">
+        <a href="${appUrl}/admin/parcels?status=arrived" style="background-color: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);">Process Ready Shipments</a>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+      <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">This is an automated system notification. Please do not reply directly to this email.</p>
+    </div>
+  `;
+
+  return sendEmail({ to: adminEmail, subject, html });
+}
+
 

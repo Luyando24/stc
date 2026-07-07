@@ -110,22 +110,20 @@ export default function MyParcelsClient({
     setSubmitError(null);
 
     try {
-      await Promise.all(submittingParcels.map(async (p) => {
-        const res = await fetch(`/api/parcels/${p.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            shipping_mode: shippingMode,
-            receiver_address_id: selectedAddressId,
-            submitted_for_shipping: true,
-          }),
-        });
+      const res = await fetch("/api/parcels/batch-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parcel_ids: submittingParcels.map((p) => p.id),
+          shipping_mode: shippingMode,
+          receiver_address_id: selectedAddressId,
+        }),
+      });
 
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || `Failed to submit parcel ${p.local_tracking_number}`);
-        }
-      }));
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit parcels for shipping.");
+      }
 
       window.location.reload();
     } catch (err: any) {

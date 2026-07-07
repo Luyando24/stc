@@ -62,8 +62,14 @@ export async function POST(request: NextRequest) {
       if (warehouseCode) {
         try {
           await notifyWelcome(email, fullName, warehouseCode);
+
+          const { getEmailSettings, notifyAdminNewCustomerRegistered } = require("@/lib/resend");
+          const { adminNotificationEmail } = await getEmailSettings();
+          if (adminNotificationEmail) {
+            await notifyAdminNewCustomerRegistered(adminNotificationEmail, fullName, email, warehouseCode, null);
+          }
         } catch (emailErr) {
-          console.error("Failed to send welcome email:", emailErr);
+          console.error("Failed to send welcome/admin alert email:", emailErr);
           // Don't fail signup if welcome email fails
         }
       } else {
