@@ -63,7 +63,7 @@ export default function AdminNav({
 
       {/* Nav */}
       <nav className="flex-1 px-3 mt-4 space-y-1">
-        {NAV_ITEMS.map((item) => {
+        {(role === "admin" ? [...NAV_ITEMS, { href: "/admin/settings", label: "Settings", icon: Settings }] : NAV_ITEMS).map((item) => {
           const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { getMaerskEvents } from "@/lib/maersk";
+import { syncShipmentEvents } from "@/lib/tracking-utils";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -33,40 +33,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "DB error" }, { status: 500 });
   }
 
-  const results = { updated: 0, failed: 0, skipped: 0 };
+  const results = { updated: 0, failed: 0 };
 
   for (const shipment of shipments ?? []) {
     try {
-      const maerskEvents = await getMaerskEvents({
-        carrierBookingReference: shipment.maersk_carrier_booking_reference,
-        transportDocumentReference: shipment.maersk_transport_document_reference,
-        equipmentReference: shipment.maersk_equipment_reference,
-      });
-
-      if (maerskEvents.length === 0) {
-        results.skipped++;
-        continue;
-      }
-
-      // Replace Maersk events in cache
-      await supabase
-        .from("tracking_events")
-        .delete()
-        .eq("shipment_id", shipment.id)
-        .eq("source", "maersk");
-
-      await supabase.from("tracking_events").insert(
-        maerskEvents.map((e) => ({
-          shipment_id: shipment.id,
-          source: "maersk" as const,
-          event_type: e.eventType,
-          description: e.eventDescription ?? e.eventType,
-          location: e.location?.locationName ?? null,
-          event_datetime: e.eventDateTime,
-          raw_payload: e,
-        }))
-      );
-
+      // Force sync to bypass the cache age check during scheduled cron execution
+      await syncShipmentEvents(supabase, shipment, true);
       results.updated++;
     } catch (err) {
       console.error(`Cron: failed to sync shipment ${shipment.stc_tracking_number}:`, err);
@@ -77,3 +49,4 @@ export async function GET(request: NextRequest) {
   console.log("Maersk cron sync complete:", results);
   return NextResponse.json({ ok: true, ...results });
 }
+

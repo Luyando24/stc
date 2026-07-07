@@ -84,7 +84,8 @@ export async function syncShipmentEvents(
     maersk_carrier_booking_reference: string | null;
     maersk_transport_document_reference: string | null;
     maersk_equipment_reference: string | null;
-  }
+  },
+  force = false
 ): Promise<void> {
   const hasMaerskRef =
     shipment.maersk_transport_document_reference ||
@@ -107,7 +108,7 @@ export async function syncShipmentEvents(
     ? (Date.now() - new Date(newest.created_at).getTime()) / 60000
     : Infinity;
 
-  if (cacheAge >= CACHE_TTL_MINUTES) {
+  if (force || cacheAge >= CACHE_TTL_MINUTES) {
     try {
       const maerskEvents = await getMaerskEvents({
         carrierBookingReference: shipment.maersk_carrier_booking_reference,

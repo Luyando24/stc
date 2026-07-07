@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/services/air-freight", label: "Services", hasDropdown: true },
+  { href: "/news", label: "News" },
 ];
 
 export default function SiteNav() {

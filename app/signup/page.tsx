@@ -29,25 +29,37 @@ export default function SignupPage() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-      },
-    });
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, fullName }),
+      });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
+      const data = await res.json();
 
-    if (data?.session) {
-      router.push("/dashboard");
-      router.refresh();
-    } else {
-      setSuccess(true);
+      if (!res.ok) {
+        setError(data.error || "Failed to create account.");
+        setLoading(false);
+        return;
+      }
+
+      // Check if session was returned (indicates user is already logged in)
+      // Since email confirmations are disabled, we get a session right away
+      if (data.success) {
+        // Sign in on client side as well to ensure session cookies are synced
+        // Or wait for redirect. We'll sign in or just redirect.
+        // Actually, since cookies are set by the server route, we can just redirect!
+        // But to be completely safe, we can trigger supabase refresh.
+        const { error: refreshError } = await supabase.auth.getSession();
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setSuccess(true);
+        setLoading(false);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
   }
