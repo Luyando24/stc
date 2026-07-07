@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Ship, Plane, CheckSquare, Square, Plus } from "lucide-react";
 import { Parcel } from "@/lib/types";
@@ -12,11 +12,13 @@ const AFRICA_COUNTRIES = [
   "Rwanda", "Mozambique", "Angola", "DR Congo", "Somalia", "Sudan", "Liberia", "Other",
 ];
 
-export default function AdminNewShipmentPage() {
+function AdminNewShipmentForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preSelectedParcelId = searchParams.get("parcel_id");
   const supabase = createClient();
 
-  const [arrivedParcels, setArrivedParcels] = useState<(Parcel & { profiles: { full_name: string; warehouse_code: string } | null })[]>([]);
+  const [arrivedParcels, setArrivedParcels] = useState<(Parcel & { profiles: { full_name: string; warehouse_code: string; country: string | null } | null })[]>([]);
   const [selectedParcels, setSelectedParcels] = useState<string[]>([]);
   const [mode, setMode] = useState<"air" | "sea">("sea");
   const [destination, setDestination] = useState("");
@@ -35,11 +37,25 @@ export default function AdminNewShipmentPage() {
     // Fetch arrived parcels
     supabase
       .from("parcels")
-      .select("*, profiles(full_name, warehouse_code)")
+      .select("*, profiles(full_name, warehouse_code, country)")
       .eq("status", "arrived")
       .order("arrived_at", { ascending: false })
       .then(({ data }) => {
-        setArrivedParcels((data as typeof arrivedParcels) ?? []);
+        const fetched = (data as typeof arrivedParcels) ?? [];
+        setArrivedParcels(fetched);
+
+        if (preSelectedParcelId) {
+          setSelectedParcels([preSelectedParcelId]);
+          const matched = fetched.find((p) => p.id === preSelectedParcelId);
+          if (matched && matched.profiles?.country) {
+            const matchedCountry = AFRICA_COUNTRIES.find(
+              (c) => c.toLowerCase() === matched.profiles?.country?.toLowerCase()
+            );
+            if (matchedCountry) {
+              setDestination(matchedCountry);
+            }
+          }
+        }
       });
 
     // Fetch registered Maersk master bookings
@@ -220,5 +236,13 @@ export default function AdminNewShipmentPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function AdminNewShipmentPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
+      <AdminNewShipmentForm />
+    </Suspense>
   );
 }

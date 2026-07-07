@@ -142,5 +142,31 @@ export async function POST(request: NextRequest) {
   // Mark parcels as consolidated
   await supabase.from("parcels").update({ status: "consolidated" }).in("id", parcel_ids);
 
+  // Trigger customer email notification
+  try {
+    const { createClient: createServiceClient } = require("@supabase/supabase-js");
+    const serviceSupabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+    );
+    const [{ data: authUser }, { data: customerProfile }] = await Promise.all([
+      serviceSupabase.auth.admin.getUserById(customerId),
+      supabase.from("profiles").select("full_name").eq("id", customerId).single(),
+    ]);
+
+    if (authUser?.user?.email) {
+      const { notifyShipmentBooked } = require("@/lib/resend");
+      await notifyShipmentBooked(
+        authUser.user.email,
+        customerProfile?.full_name ?? "",
+        trackingNumber,
+        mode,
+        destination_country
+      );
+    }
+  } catch (notifyErr) {
+    console.error("Failed to notify user about shipment booking:", notifyErr);
+  }
+
   return NextResponse.json({ shipment_id: shipment.id, stc_tracking_number: trackingNumber });
 }

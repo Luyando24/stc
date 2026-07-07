@@ -157,11 +157,25 @@ export default async function AdminParcelsPage({
               {parcel.status === "pending" && (
                 <MarkArrivedForm parcel={parcel} />
               )}
-              {parcel.status === "arrived" && parcel.weight_kg && (
-                <p className="text-xs text-slate-500">
-                  {parcel.weight_kg}kg · {parcel.dimensions ?? "No dimensions"} · Arrived{" "}
-                  {parcel.arrived_at ? new Date(parcel.arrived_at).toLocaleDateString() : "—"}
-                </p>
+              {parcel.status === "arrived" && (
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-xs text-slate-500">
+                    {parcel.weight_kg ? `${parcel.weight_kg}kg` : "Awaiting weight"} · {parcel.dimensions ?? "No dimensions"} · Arrived{" "}
+                    {parcel.arrived_at ? new Date(parcel.arrived_at).toLocaleDateString() : "—"}
+                  </p>
+                  {parcel.item_description &&
+                    parcel.item_description.trim() !== "" &&
+                    parcel.declared_value !== null &&
+                    parcel.declared_value !== undefined && (
+                      <Link
+                        href={`/admin/shipments/new?parcel_id=${parcel.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Quick Ship
+                      </Link>
+                    )}
+                </div>
               )}
             </div>
           ))
