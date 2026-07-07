@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   // Find customer by warehouse code
   const { data: customer } = await serviceSupabase
     .from("profiles")
-    .select("id")
+    .select("id, full_name")
     .eq("warehouse_code", warehouse_code)
     .single();
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Customer with code ${warehouse_code} not found.` }, { status: 404 });
   }
 
-  // Create parcel
+  // Create parcel with initial 'arrived' status
   const { data: parcel, error: parcelError } = await serviceSupabase
     .from("parcels")
     .insert({
@@ -57,13 +57,29 @@ export async function POST(request: Request) {
       supplier_name: supplier_name || null,
       weight_kg: weight_kg || null,
       dimensions: dimensions || null,
-      status: "pending",
+      status: "arrived",
+      arrived_at: new Date().toISOString(),
     })
     .select("*")
     .single();
 
   if (parcelError || !parcel) {
     return NextResponse.json({ error: parcelError?.message || "Failed to create parcel." }, { status: 500 });
+  }
+
+  // Trigger customer email notification
+  try {
+    const { data: authUser } = await serviceSupabase.auth.admin.getUserById(customer.id);
+    if (authUser?.user?.email) {
+      const { notifyParcelArrived } = require("@/lib/resend");
+      await notifyParcelArrived(
+        authUser.user.email,
+        customer.full_name ?? "",
+        local_tracking_number
+      );
+    }
+  } catch (notifyErr) {
+    console.error("Failed to notify user about parcel arrival:", notifyErr);
   }
 
   return NextResponse.json({ parcel_id: parcel.id });

@@ -26,34 +26,48 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
-  // Fetch shipment detail with customer profile for notification
+  // Fetch shipment detail with customer profile and Maersk references
   const { data: shipmentData } = await supabase
     .from("shipments")
-    .select("stc_tracking_number, customer_id")
+    .select("stc_tracking_number, customer_id, maersk_carrier_booking_reference, maersk_transport_document_reference, maersk_equipment_reference")
     .eq("id", id)
     .single();
 
-  if (shipmentData) {
-    const { data: customerProfile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", shipmentData.customer_id)
-      .single();
+  if (!shipmentData) {
+    return NextResponse.json({ error: "Shipment not found." }, { status: 404 });
+  }
 
-    // Use service role to get the user's email address safely
-    const { createServiceClient } = require("@/lib/supabase/server");
-    const serviceClient = createServiceClient();
-    const { data: authUser } = await serviceClient.auth.admin.getUserById(shipmentData.customer_id);
+  const hasMaersk =
+    shipmentData.maersk_carrier_booking_reference ||
+    shipmentData.maersk_transport_document_reference ||
+    shipmentData.maersk_equipment_reference;
 
-    if (authUser?.user?.email) {
-      const { notifyShipmentStatusChanged } = require("@/lib/resend");
-      await notifyShipmentStatusChanged(
-        authUser.user.email,
-        customerProfile?.full_name ?? "",
-        shipmentData.stc_tracking_number,
-        parsed.data.status
-      );
-    }
+  if (hasMaersk) {
+    return NextResponse.json(
+      { error: "Status of Maersk-linked shipments is managed automatically and cannot be changed manually." },
+      { status: 400 }
+    );
+  }
+
+  const { data: customerProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", shipmentData.customer_id)
+    .single();
+
+  // Use service role to get the user's email address safely
+  const { createServiceClient } = require("@/lib/supabase/server");
+  const serviceClient = createServiceClient();
+  const { data: authUser } = await serviceClient.auth.admin.getUserById(shipmentData.customer_id);
+
+  if (authUser?.user?.email) {
+    const { notifyShipmentStatusChanged } = require("@/lib/resend");
+    await notifyShipmentStatusChanged(
+      authUser.user.email,
+      customerProfile?.full_name ?? "",
+      shipmentData.stc_tracking_number,
+      parsed.data.status
+    );
   }
 
   const { error } = await supabase

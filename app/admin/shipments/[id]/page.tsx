@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plane, Ship, MapPin } from "lucide-react";
@@ -6,6 +6,7 @@ import TrackingTimeline from "@/components/tracking/TrackingTimeline";
 import AdminMilestoneForm from "@/components/admin/AdminMilestoneForm";
 import AdminShipmentStatusForm from "@/components/admin/AdminShipmentStatusForm";
 import AdminAssignMaerskForm from "@/components/admin/AdminAssignMaerskForm";
+import { syncShipmentEvents } from "@/lib/tracking-utils";
 
 export default async function AdminShipmentDetailPage({
   params,
@@ -22,6 +23,10 @@ export default async function AdminShipmentDetailPage({
     .single();
 
   if (!shipment) notFound();
+
+  // Sync Maersk events using service client to write cache
+  const serviceSupabase = createServiceClient();
+  await syncShipmentEvents(serviceSupabase, shipment);
 
   const { data: events } = await supabase
     .from("tracking_events")
@@ -115,7 +120,13 @@ export default async function AdminShipmentDetailPage({
       {/* Status update */}
       <div className="card p-5 mb-6">
         <h2 className="text-sm font-semibold text-slate-900 mb-4">Update Status</h2>
-        <AdminShipmentStatusForm shipmentId={id} currentStatus={shipment.status} />
+        {shipment.maersk_carrier_booking_reference || shipment.maersk_transport_document_reference || shipment.maersk_equipment_reference ? (
+          <p className="text-xs text-slate-500 bg-slate-50 border border-slate-100 p-3 rounded-lg leading-relaxed">
+            Status of Maersk-linked shipments is managed automatically based on live tracking events and cannot be changed manually.
+          </p>
+        ) : (
+          <AdminShipmentStatusForm shipmentId={id} currentStatus={shipment.status} />
+        )}
       </div>
 
       {/* Add manual milestone */}

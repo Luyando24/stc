@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Ship, Plane, Plus, MapPin, Calendar, Anchor, ShieldCheck } from "lucide-react";
+import { generateSTCTrackingNumber } from "@/lib/tracking-utils";
 
 const AFRICA_COUNTRIES = [
   "Nigeria", "Ghana", "Kenya", "Tanzania", "Uganda", "Ethiopia", "Zambia",
@@ -30,9 +31,31 @@ export default function AdminMaerskBookingsPage() {
   const [fetchingDetails, setFetchingDetails] = useState(false);
   const [fetchInfo, setFetchInfo] = useState<string | null>(null);
 
+  // Parcel assignment state
+  const [arrivedParcels, setArrivedParcels] = useState<any[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [assigningParcelId, setAssigningParcelId] = useState<string>("");
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+
+  const [derivedStatus, setDerivedStatus] = useState("booked");
+
   useEffect(() => {
     loadBookings();
+    loadArrivedParcels();
   }, []);
+
+  async function loadArrivedParcels() {
+    const { data, error } = await supabase
+      .from("parcels")
+      .select("*, profiles(full_name, warehouse_code)")
+      .eq("status", "arrived")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setArrivedParcels(data);
+    }
+  }
 
   async function loadBookings() {
     setFetching(true);
@@ -47,6 +70,107 @@ export default function AdminMaerskBookingsPage() {
       setBookings(data);
     }
     setFetching(false);
+  }
+
+  async function handleAssignParcel() {
+    if (!selectedBooking || !assigningParcelId) return;
+    setAssignLoading(true);
+    setAssignError(null);
+
+    try {
+      const selectedParcel = arrivedParcels.find((p) => p.id === assigningParcelId);
+      if (!selectedParcel) {
+        throw new Error("Selected parcel not found.");
+      }
+
+      // Query if there is an existing shipment for this customer linked to this Maersk booking
+      let query = supabase
+        .from("shipments")
+        .select("id")
+        .eq("customer_id", selectedParcel.customer_id);
+
+      if (selectedBooking.maersk_carrier_booking_reference) {
+        query = query.eq("maersk_carrier_booking_reference", selectedBooking.maersk_carrier_booking_reference);
+      }
+      if (selectedBooking.maersk_transport_document_reference) {
+        query = query.eq("maersk_transport_document_reference", selectedBooking.maersk_transport_document_reference);
+      }
+      if (selectedBooking.maersk_equipment_reference) {
+        query = query.eq("maersk_equipment_reference", selectedBooking.maersk_equipment_reference);
+      }
+
+      const { data: existingShipment } = await query.maybeSingle();
+
+      let shipmentId = existingShipment?.id;
+
+      if (!shipmentId) {
+        // Create a new customer shipment linked to this Maersk booking
+        const newTracking = await generateSTCTrackingNumber(supabase);
+        
+        const insertData: any = {
+          customer_id: selectedParcel.customer_id,
+          stc_tracking_number: newTracking,
+          status: selectedBooking.status || "booked",
+          mode: selectedBooking.mode,
+          destination_country: selectedBooking.destination_country,
+          estimated_delivery_date: selectedBooking.estimated_delivery_date || null,
+        };
+
+        if (selectedBooking.maersk_carrier_booking_reference) {
+          insertData.maersk_carrier_booking_reference = selectedBooking.maersk_carrier_booking_reference;
+        }
+        if (selectedBooking.maersk_transport_document_reference) {
+          insertData.maersk_transport_document_reference = selectedBooking.maersk_transport_document_reference;
+        }
+        if (selectedBooking.maersk_equipment_reference) {
+          insertData.maersk_equipment_reference = selectedBooking.maersk_equipment_reference;
+        }
+
+        const { data: newShipment, error: createError } = await supabase
+          .from("shipments")
+          .insert(insertData)
+          .select("id")
+          .single();
+
+        if (createError || !newShipment) {
+          throw new Error(createError?.message || "Failed to create shipment for assignment.");
+        }
+
+        shipmentId = newShipment.id;
+      }
+
+      // Link parcel to shipment
+      const { error: linkError } = await supabase
+        .from("shipment_parcels")
+        .insert({
+          shipment_id: shipmentId,
+          parcel_id: selectedParcel.id,
+        });
+
+      if (linkError) {
+        throw new Error(linkError.message || "Failed to link parcel to shipment.");
+      }
+
+      // Update parcel status to consolidated
+      const { error: updateError } = await supabase
+        .from("parcels")
+        .update({ status: "consolidated" })
+        .eq("id", selectedParcel.id);
+
+      if (updateError) {
+        throw new Error(updateError.message || "Failed to update parcel status.");
+      }
+
+      // Reset and reload lists
+      setSelectedBooking(null);
+      setAssigningParcelId("");
+      loadArrivedParcels();
+    } catch (err: any) {
+      console.error(err);
+      setAssignError(err.message || "An unexpected error occurred during assignment.");
+    } finally {
+      setAssignLoading(false);
+    }
   }
 
   async function fetchMaerskDetails() {
@@ -69,6 +193,9 @@ export default function AdminMaerskBookingsPage() {
       }
       if (data.estimated_delivery_date) {
         setEta(data.estimated_delivery_date);
+      }
+      if (data.derived_status) {
+        setDerivedStatus(data.derived_status);
       }
 
       setFetchInfo(`Successfully fetched details! Destination: ${data.destination_country || "Other"}, ETA: ${data.estimated_delivery_date || "Unknown"}`);
@@ -117,7 +244,7 @@ export default function AdminMaerskBookingsPage() {
         stc_tracking_number: trackingRef.toUpperCase(),
         mode,
         destination_country: destination,
-        status: "booked",
+        status: derivedStatus,
         estimated_delivery_date: eta || null,
         notes: notes || null,
       };
@@ -180,6 +307,7 @@ export default function AdminMaerskBookingsPage() {
                     <th className="text-left px-4 py-3 text-slate-500 font-medium">Mode</th>
                     <th className="text-left px-4 py-3 text-slate-500 font-medium">Destination</th>
                     <th className="text-left px-4 py-3 text-slate-500 font-medium">ETA</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -199,6 +327,14 @@ export default function AdminMaerskBookingsPage() {
                         <td className="px-4 py-3 text-slate-700">{b.destination_country}</td>
                         <td className="px-4 py-3 text-slate-500 text-xs">
                           {b.estimated_delivery_date ? new Date(b.estimated_delivery_date).toLocaleDateString() : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => setSelectedBooking(b)}
+                            className="btn bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg inline-flex items-center gap-1 transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Assign Parcel
+                          </button>
                         </td>
                       </tr>
                     );
@@ -350,6 +486,75 @@ export default function AdminMaerskBookingsPage() {
           </button>
         </form>
       </div>
+
+      {/* Assign Parcel Modal */}
+      {selectedBooking && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl border border-slate-100 space-y-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Assign Arrived Parcel</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Assign an arrived customer parcel to Maersk Booking <span className="font-mono font-semibold text-slate-855">{selectedBooking.stc_tracking_number}</span>.
+              </p>
+            </div>
+
+            {assignError && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-xs">
+                {assignError}
+              </div>
+            )}
+
+            <div>
+              <label className="label text-slate-700">Select Parcel</label>
+              {arrivedParcels.length === 0 ? (
+                <p className="text-xs text-slate-500 py-3 text-center border border-dashed border-slate-200 rounded-lg">
+                  No arrived/unassigned parcels available.
+                </p>
+              ) : (
+                <select
+                  value={assigningParcelId}
+                  onChange={(e) => setAssigningParcelId(e.target.value)}
+                  className="input text-sm"
+                  required
+                >
+                  <option value="">Select a parcel…</option>
+                  {arrivedParcels.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.local_tracking_number} — {p.profiles?.full_name} ({p.profiles?.warehouse_code})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedBooking(null);
+                  setAssignError(null);
+                }}
+                disabled={assignLoading}
+                className="btn-secondary text-xs py-2 px-4"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAssignParcel}
+                disabled={assignLoading || !assigningParcelId}
+                className="btn-primary text-xs py-2 px-4"
+              >
+                {assignLoading ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Assigning…</>
+                ) : (
+                  "Confirm Assignment"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

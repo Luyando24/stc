@@ -27,7 +27,12 @@ export default function AdminNewShipmentPage() {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Maersk dropdown selection states
+  const [maerskBookings, setMaerskBookings] = useState<any[]>([]);
+  const [selectedBookingId, setSelectedBookingId] = useState("");
+
   useEffect(() => {
+    // Fetch arrived parcels
     supabase
       .from("parcels")
       .select("*, profiles(full_name, warehouse_code)")
@@ -35,6 +40,16 @@ export default function AdminNewShipmentPage() {
       .order("arrived_at", { ascending: false })
       .then(({ data }) => {
         setArrivedParcels((data as typeof arrivedParcels) ?? []);
+      });
+
+    // Fetch registered Maersk master bookings
+    supabase
+      .from("shipments")
+      .select("*, profiles!inner(role)")
+      .eq("profiles.role", "admin")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setMaerskBookings(data ?? []);
         setFetching(false);
       });
   }, []);
@@ -43,6 +58,31 @@ export default function AdminNewShipmentPage() {
     setSelectedParcels((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
+  }
+
+  function handleBookingChange(id: string) {
+    setSelectedBookingId(id);
+    if (!id) {
+      setMaerskRef({ booking: "", tdRef: "", equipment: "" });
+      return;
+    }
+
+    const booking = maerskBookings.find((b) => b.id === id);
+    if (booking) {
+      // Auto-fill shipment destination, eta, mode, and references
+      setDestination(booking.destination_country || "");
+      if (booking.estimated_delivery_date) {
+        setEta(booking.estimated_delivery_date.split("T")[0]);
+      } else {
+        setEta("");
+      }
+      setMode(booking.mode === "air" ? "air" : "sea");
+      setMaerskRef({
+        booking: booking.maersk_carrier_booking_reference || "",
+        tdRef: booking.maersk_transport_document_reference || "",
+        equipment: booking.maersk_equipment_reference || "",
+      });
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -88,7 +128,7 @@ export default function AdminNewShipmentPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Parcel selection */}
+        {/* 1. Parcel selection */}
         <div className="card p-5">
           <h2 className="text-sm font-semibold text-slate-900 mb-4">Select Arrived Parcels ({selectedParcels.length})</h2>
           {arrivedParcels.length === 0 ? (
@@ -116,7 +156,30 @@ export default function AdminNewShipmentPage() {
           )}
         </div>
 
-        {/* Mode + destination */}
+        {/* 2. Maersk Booking Selection (Second Form) */}
+        <div className="card p-5">
+          <h2 className="text-sm font-semibold text-slate-900 mb-1.5">Maersk Booking / Shipment (Optional)</h2>
+          <p className="text-xs text-slate-400 mb-4">
+            Select a registered Maersk Master Booking to auto-link and populate the shipment&apos;s destination, mode, and ETA.
+          </p>
+          <div>
+            <label className="label text-slate-700">Select Maersk Master Booking</label>
+            <select
+              value={selectedBookingId}
+              onChange={(e) => handleBookingChange(e.target.value)}
+              className="input text-sm font-sans"
+            >
+              <option value="">No Maersk booking link…</option>
+              {maerskBookings.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.stc_tracking_number} ({b.mode === "sea" ? "Sea" : "Air"} · {b.destination_country})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 3. Mode + destination */}
         <div className="card p-5 space-y-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-900 mb-3">Freight Mode</h2>
@@ -133,7 +196,7 @@ export default function AdminNewShipmentPage() {
           </div>
           <div>
             <label className="label">Destination Country</label>
-            <select value={destination} onChange={(e) => setDestination(e.target.value)} className="input" required>
+            <select value={destination} onChange={(e) => setDestination(e.target.value)} className="input text-sm" required>
               <option value="">Select country…</option>
               {AFRICA_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -141,38 +204,18 @@ export default function AdminNewShipmentPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Freight Cost (USD)</label>
-              <input type="number" value={freightCost} onChange={(e) => setFreightCost(e.target.value)} className="input" placeholder="0.00" step="0.01" />
+              <input type="number" value={freightCost} onChange={(e) => setFreightCost(e.target.value)} className="input text-sm" placeholder="0.00" step="0.01" />
             </div>
             <div>
               <label className="label">Estimated Delivery</label>
-              <input type="date" value={eta} onChange={(e) => setEta(e.target.value)} className="input" />
+              <input type="date" value={eta} onChange={(e) => setEta(e.target.value)} className="input text-sm" />
             </div>
           </div>
         </div>
 
-        {/* Maersk references (sea only) */}
-        {mode === "sea" && (
-          <div className="card p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-slate-900">Maersk References (optional)</h2>
-            <p className="text-xs text-slate-500">Fill in whichever reference you have from the Maersk booking.</p>
-            <div>
-              <label className="label">Carrier Booking Reference</label>
-              <input type="text" value={maerskRef.booking} onChange={(e) => setMaerskRef((p) => ({ ...p, booking: e.target.value }))} className="input font-mono text-sm" placeholder="e.g. 123456789" />
-            </div>
-            <div>
-              <label className="label">Transport Document Reference (B/L)</label>
-              <input type="text" value={maerskRef.tdRef} onChange={(e) => setMaerskRef((p) => ({ ...p, tdRef: e.target.value }))} className="input font-mono text-sm" placeholder="e.g. MAEU1234567890" />
-            </div>
-            <div>
-              <label className="label">Equipment Reference (Container #)</label>
-              <input type="text" value={maerskRef.equipment} onChange={(e) => setMaerskRef((p) => ({ ...p, equipment: e.target.value }))} className="input font-mono text-sm" placeholder="e.g. TCKU3045656" />
-            </div>
-          </div>
-        )}
-
         {error && <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>}
 
-        <button type="submit" disabled={loading || selectedParcels.length === 0} className="btn-primary w-full justify-center">
+        <button type="submit" disabled={loading || selectedParcels.length === 0} className="btn-primary w-full justify-center text-sm py-2.5 rounded-xl">
           {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating shipment…</> : <><Plus className="w-4 h-4" /> Create Shipment & Generate Tracking Number</>}
         </button>
       </form>

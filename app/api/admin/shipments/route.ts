@@ -69,6 +69,49 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to generate tracking number." }, { status: 500 });
   }
 
+  // Determine initial status based on Maersk booking
+  let initialStatus = "booked";
+  const hasMaersk =
+    maersk_carrier_booking_reference ||
+    maersk_transport_document_reference ||
+    maersk_equipment_reference;
+
+  if (hasMaersk) {
+    let masterQuery = supabase
+      .from("shipments")
+      .select("status, profiles!inner(role)")
+      .eq("profiles.role", "admin");
+
+    if (maersk_carrier_booking_reference) {
+      masterQuery = masterQuery.eq("maersk_carrier_booking_reference", maersk_carrier_booking_reference);
+    }
+    if (maersk_transport_document_reference) {
+      masterQuery = masterQuery.eq("maersk_transport_document_reference", maersk_transport_document_reference);
+    }
+    if (maersk_equipment_reference) {
+      masterQuery = masterQuery.eq("maersk_equipment_reference", maersk_equipment_reference);
+    }
+
+    const { data: masterBooking } = await masterQuery.maybeSingle();
+    if (masterBooking) {
+      initialStatus = masterBooking.status || "booked";
+    } else {
+      // Fallback: query live Maersk API and calculate status
+      const { getMaerskEvents } = require("@/lib/maersk");
+      const { determineShipmentStatus } = require("@/lib/tracking-utils");
+      try {
+        const maerskEvents = await getMaerskEvents({
+          carrierBookingReference: maersk_carrier_booking_reference || undefined,
+          transportDocumentReference: maersk_transport_document_reference || undefined,
+          equipmentReference: maersk_equipment_reference || undefined,
+        });
+        initialStatus = determineShipmentStatus(maerskEvents);
+      } catch (err) {
+        console.error("Failed to fetch initial status from Maersk fallback:", err);
+      }
+    }
+  }
+
   // Create shipment
   const { data: shipment, error: shipmentError } = await supabase
     .from("shipments")
@@ -77,7 +120,7 @@ export async function POST(request: NextRequest) {
       stc_tracking_number: trackingNumber,
       mode,
       destination_country,
-      status: "booked",
+      status: initialStatus,
       freight_cost: freight_cost ?? null,
       estimated_delivery_date: estimated_delivery_date ?? null,
       maersk_carrier_booking_reference: maersk_carrier_booking_reference ?? null,

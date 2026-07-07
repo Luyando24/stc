@@ -1,8 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plane, Ship, MapPin, Calendar, Package } from "lucide-react";
 import TrackingTimeline from "@/components/tracking/TrackingTimeline";
+import { syncShipmentEvents } from "@/lib/tracking-utils";
 
 export default async function ShipmentDetailPage({
   params,
@@ -22,6 +23,10 @@ export default async function ShipmentDetailPage({
     .single();
 
   if (!shipment) notFound();
+
+  // Sync Maersk events using service client to write cache
+  const serviceSupabase = createServiceClient();
+  await syncShipmentEvents(serviceSupabase, shipment);
 
   const { data: events } = await supabase
     .from("tracking_events")

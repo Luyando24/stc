@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getMaerskEvents } from "@/lib/maersk";
+import { determineShipmentStatus } from "@/lib/tracking-utils";
 
 // Map common country codes to dropdown values
 const COUNTRY_CODE_MAP: Record<string, string> = {
@@ -111,9 +112,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Calculate derived status based on occurred events
+    const derivedStatus = determineShipmentStatus(events);
+
     return NextResponse.json({
       destination_country: destinationCountry || "Other",
       estimated_delivery_date: etaDate || null,
+      derived_status: derivedStatus,
       parsed_from: {
         event_description: finalEvent?.eventDescription || finalEvent?.eventType,
         location: finalEvent?.location?.locationName || "Unknown",
