@@ -88,6 +88,11 @@ interface TrackingTimelineProps {
 }
 
 export default function TrackingTimeline({ events, shipmentStatus }: TrackingTimelineProps) {
+  // Count events with dates in the past (historical events)
+  const pastEventsCount = events.filter(
+    (event) => event.event_datetime && new Date(event.event_datetime) <= new Date()
+  ).length;
+
   if (shipmentStatus === "exception") {
     return (
       <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-100 mb-4">
@@ -116,72 +121,86 @@ export default function TrackingTimeline({ events, shipmentStatus }: TrackingTim
         </div>
       ) : (
         <div className="relative">
-          <div className="absolute left-5 top-0 bottom-0 w-px bg-slate-200" />
           <div className="space-y-6">
             {events.map((event, i) => {
               const Icon = getEventIcon(event.event_type, event.source);
-              const isLatest = i === 0;
+              const isPastEvent = event.event_datetime && new Date(event.event_datetime) <= new Date();
+              const isLatest = i === pastEventsCount - 1 && isPastEvent;
+              // Line segment is blue if both current and previous events are in the past
+              const prevEventIsPast = i > 0 && events[i - 1].event_datetime && new Date(events[i - 1].event_datetime!) <= new Date();
+              const lineIsBlue = isPastEvent && prevEventIsPast;
               return (
-                <div key={event.id} className="flex gap-4 relative">
-                  <div
+              <div key={event.id} className="flex gap-4 relative">
+                {/* Vertical line segment connecting to previous event */}
+                {i > 0 && (
+                  <div 
+                    className="absolute left-5 w-px"
+                    style={{
+                      top: '-24px',
+                      height: '24px',
+                      background: lineIsBlue ? '#2563eb' : '#e2e8f0'
+                    }}
+                  />
+                )}
+                <div
+                  className={clsx(
+                    "w-10 h-10 rounded-full border flex items-center justify-center flex-shrink-0 z-10",
+                    isLatest
+                      ? "bg-brand-50 border-brand-600"
+                      : "bg-white border-slate-200"
+                  )}
+                >
+                  <Icon
                     className={clsx(
-                      "w-10 h-10 rounded-full border flex items-center justify-center flex-shrink-0 z-10",
-                      isLatest
-                        ? "bg-brand-50 border-brand-600"
-                        : "bg-white border-slate-200"
+                      "w-4 h-4",
+                      isLatest ? "text-brand-600" : "text-slate-400"
                     )}
-                  >
-                    <Icon
-                      className={clsx(
-                        "w-4 h-4",
-                        isLatest ? "text-brand-600" : "text-slate-400"
-                      )}
-                    />
-                  </div>
-                  <div className="flex-1 pb-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p
-                          className={clsx(
-                            "text-sm font-medium",
-                            isLatest ? "text-slate-900" : "text-slate-650"
-                          )}
-                        >
-                          {event.description ?? event.event_type ?? "Update"}
+                  />
+                </div>
+                <div className="flex-1 pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p
+                        className={clsx(
+                          "text-sm font-medium",
+                          isLatest ? "text-slate-900" : "text-slate-650"
+                        )}
+                      >
+                        {event.description ?? event.event_type ?? "Update"}
+                      </p>
+                      {event.location && (
+                        <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {event.location}
                         </p>
-                        {event.location && (
-                          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {event.location}
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      {event.event_datetime && (
+                        <>
+                          <p className="text-xs text-slate-500">
+                            {new Date(event.event_datetime).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
                           </p>
-                        )}
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        {event.event_datetime && (
-                          <>
-                            <p className="text-xs text-slate-500">
-                              {new Date(event.event_datetime).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
-                            </p>
-                            <p className="text-xs text-slate-400">
-                              {new Date(event.event_datetime).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                          </>
-                        )}
-                        {event.source === "maersk" && (
-                          <span className="text-xs text-slate-550 mt-0.5 block">Maersk</span>
-                        )}
-                      </div>
+                          <p className="text-xs text-slate-400">
+                            {new Date(event.event_datetime).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </>
+                      )}
+                      {event.source === "maersk" && (
+                        <span className="text-xs text-slate-550 mt-0.5 block">Maersk</span>
+                      )}
                     </div>
                   </div>
                 </div>
-              );
+              </div>
+            );
             })}
           </div>
         </div>
