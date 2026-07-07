@@ -18,6 +18,10 @@ export default async function DashboardLayout({
     .eq("id", user.id)
     .single();
 
+  if (profile && ["admin", "warehouse_staff"].includes(profile.role)) {
+    redirect("/admin");
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
       <DashboardNav profile={profile} />

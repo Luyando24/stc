@@ -5,6 +5,7 @@ import { ArrowLeft, Plane, Ship, MapPin } from "lucide-react";
 import TrackingTimeline from "@/components/tracking/TrackingTimeline";
 import AdminMilestoneForm from "@/components/admin/AdminMilestoneForm";
 import AdminShipmentStatusForm from "@/components/admin/AdminShipmentStatusForm";
+import AdminAssignMaerskForm from "@/components/admin/AdminAssignMaerskForm";
 
 export default async function AdminShipmentDetailPage({
   params,
@@ -16,7 +17,7 @@ export default async function AdminShipmentDetailPage({
 
   const { data: shipment } = await supabase
     .from("shipments")
-    .select("*, profiles(full_name, warehouse_code)")
+    .select("*, profiles(full_name, warehouse_code, role)")
     .eq("id", id)
     .single();
 
@@ -32,6 +33,12 @@ export default async function AdminShipmentDetailPage({
     .from("shipment_parcels")
     .select("parcel_id, parcels(*)")
     .eq("shipment_id", id);
+
+  const { data: maerskBookings } = await supabase
+    .from("shipments")
+    .select("id, stc_tracking_number, mode, destination_country, maersk_carrier_booking_reference, maersk_transport_document_reference, maersk_equipment_reference, profiles!inner(role)")
+    .eq("profiles.role", "admin")
+    .order("created_at", { ascending: false });
 
   return (
     <div className="max-w-2xl">
@@ -92,6 +99,18 @@ export default async function AdminShipmentDetailPage({
           </div>
         )}
       </div>
+
+      {/* Assign to Maersk Booking (only for customer shipments) */}
+      {shipment.profiles?.role !== "admin" && (
+        <div className="card p-5 mb-6">
+          <h2 className="text-sm font-semibold text-slate-900 mb-4">Assign to Maersk Master Booking</h2>
+          <AdminAssignMaerskForm
+            shipmentId={id}
+            currentTrackingNumber={shipment.stc_tracking_number}
+            maerskBookings={(maerskBookings as any[]) ?? []}
+          />
+        </div>
+      )}
 
       {/* Status update */}
       <div className="card p-5 mb-6">

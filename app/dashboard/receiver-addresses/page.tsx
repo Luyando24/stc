@@ -25,7 +25,7 @@ const AFRICA_COUNTRIES = [
   "Nigeria", "Ghana", "Kenya", "Tanzania", "Uganda", "Ethiopia", "Zambia",
   "Zimbabwe", "South Africa", "Cameroon", "Côte d'Ivoire", "Senegal",
   "Rwanda", "Mozambique", "Angola", "DR Congo", "Somalia", "Sudan",
-  "Other",
+  "Liberia", "Other",
 ];
 
 export default function ReceiverAddressesPage() {

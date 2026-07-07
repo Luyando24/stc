@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://stc-logistics.com/sitemap.xml

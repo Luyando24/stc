@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -10,7 +10,7 @@ const AddParcelSchema = z.object({
   dimensions: z.string().optional().nullable(),
 });
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -34,8 +34,11 @@ export async function POST(request: NextRequest) {
     dimensions,
   } = parsed.data;
 
+  // Use service client to bypass RLS constraint on public.parcels insert
+  const serviceSupabase = createServiceClient();
+
   // Find customer by warehouse code
-  const { data: customer } = await supabase
+  const { data: customer } = await serviceSupabase
     .from("profiles")
     .select("id")
     .eq("warehouse_code", warehouse_code)
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Create parcel
-  const { data: parcel, error: parcelError } = await supabase
+  const { data: parcel, error: parcelError } = await serviceSupabase
     .from("parcels")
     .insert({
       customer_id: customer.id,

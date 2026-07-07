@@ -32,7 +32,24 @@ function LoginForm() {
       return;
     }
 
-    router.push(redirect);
+    // Determine correct redirect based on role
+    const { data: { user } } = await supabase.auth.getUser();
+    let target = redirect;
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      
+      if (profile && ["admin", "warehouse_staff"].includes(profile.role)) {
+        if (redirect === "/dashboard") {
+          target = "/admin";
+        }
+      }
+    }
+
+    router.push(target);
     router.refresh();
   }
 

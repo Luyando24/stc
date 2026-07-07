@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { generateSTCTrackingNumber } from "@/lib/tracking-utils";
 
 const ShipmentSchema = z.object({
   parcel_ids: z.array(z.string().uuid()).min(1, "Select at least one parcel"),
@@ -58,12 +59,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Generate STC tracking number server-side using the DB function
-  const { data: trackingData, error: trackingError } = await supabase.rpc(
-    "generate_stc_tracking_number"
-  );
-
-  if (trackingError || !trackingData) {
+  // Generate STC tracking number server-side using utility function
+  let trackingData: string;
+  try {
+    trackingData = await generateSTCTrackingNumber(supabase);
+  } catch (err: any) {
+    console.error("Tracking generation error:", err);
     return NextResponse.json(
       { error: "Failed to generate tracking number." },
       { status: 500 }

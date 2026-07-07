@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Settings,
+  Ship,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/parcels", label: "Parcels", icon: Package },
   { href: "/admin/shipments", label: "Shipments", icon: Plane },
+  { href: "/admin/maersk", label: "Maersk Bookings", icon: Ship },
   { href: "/admin/customers", label: "Customers", icon: Users },
 ];
 

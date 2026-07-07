@@ -9,7 +9,7 @@ import { Parcel } from "@/lib/types";
 const AFRICA_COUNTRIES = [
   "Nigeria", "Ghana", "Kenya", "Tanzania", "Uganda", "Ethiopia", "Zambia",
   "Zimbabwe", "South Africa", "Cameroon", "Côte d'Ivoire", "Senegal",
-  "Rwanda", "Mozambique", "Angola", "DR Congo", "Somalia", "Sudan", "Other",
+  "Rwanda", "Mozambique", "Angola", "DR Congo", "Somalia", "Sudan", "Liberia", "Other",
 ];
 
 export default function AdminNewShipmentPage() {

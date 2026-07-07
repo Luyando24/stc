@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* STC Logistics Brand System - Light Theme */
+    --background: 0 0% 100%;
+    --foreground: 210 100% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 100% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 100% 15%;
+
+    /* Navy Blue: #003366 */
+    --primary: 210 100% 20%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Crimson Red: #DC143C */
+    --secondary: 348 83% 47%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Light Grey: #F5F5F5 */
+    --muted: 0 0% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 210 100% 20%;
+
+    --destructive: 348 83% 47%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 210 100% 20%;
+
+    --radius: 0.75rem;
+
+    /* Status Colors */
+    --status-pending: 38 92% 50%;
+    --status-pending-bg: 48 96% 89%;
+    --status-active: 142 71% 45%;
+    --status-active-bg: 149 80% 90%;
+    --status-denied: 348 83% 47%;
+    --status-denied-bg: 354 100% 90%;
+    --status-inactive: 215 16% 47%;
+    --status-inactive-bg: 214 32% 91%;
+
+    /* Chat Widget Tokens */
+    --chat-primary: 210 100% 20%;
+    --chat-accent: 348 83% 47%;
+    --chat-message-user: 210 100% 20%;
+    --chat-message-svc: 0 0% 96%;
+    --chat-border: 214 32% 91%;
+    --chat-text: 210 100% 15%;
+  }
+
+  .dark {
+    /* STC Logistics Brand System - Dark Theme */
+    --background: 210 100% 10%;
+    --foreground: 0 0% 96%;
+
+    --card: 210 100% 15%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 210 100% 15%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 210 100% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 348 83% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 50% 20%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 210 50% 20%;
+    --accent-foreground: 0 0% 96%;
+
+    --destructive: 348 83% 47%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 50% 25%;
+    --input: 210 50% 25%;
+    --ring: 210 100% 40%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    color: hsl(var(--foreground));
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .bg-navy-gradient {
+    background: linear-gradient(135deg, hsl(210 100% 15%), hsl(210 100% 25%));
+  }
+  
+  /* Admin & Gallery Shared Utilities */
+  .admin-table-container {
+    @apply w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm;
+  }
+  .admin-th {
+    @apply h-12 px-4 text-left align-middle font-semibold text-muted-foreground bg-muted/50 text-sm whitespace-nowrap;
+  }
+  .admin-td {
+    @apply p-4 align-middle text-sm text-card-foreground border-b border-border/50;
+  }
+  .admin-tr {
+    @apply transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted;
+  }
+  
+  .glass-panel {
+    @apply bg-background/80 backdrop-blur-md border border-border;
+  }
+
+  /* Status Badges */
+  .badge-pending {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending))];
+  }
+  .badge-active {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[hsl(var(--status-active-bg))] text-[hsl(var(--status-active))];
+  }
+  .badge-denied {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[hsl(var(--status-denied-bg))] text-[hsl(var(--status-denied))];
+  }
+  .badge-inactive {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[hsl(var(--status-inactive-bg))] text-[hsl(var(--status-inactive))];
+  }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes typingDot {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
