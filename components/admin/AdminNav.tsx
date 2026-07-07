@@ -53,7 +53,7 @@ export default function AdminNav({
           <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
             <Package2 className="w-4 h-4 text-white" />
           </div>
-          <span className="font-display font-bold text-slate-900 text-sm">STC Logistics</span>
+          <span className="font-display font-bold text-lg text-slate-900 text-sm">STC LOGISTICS</span>
         </Link>
 
       </div>
