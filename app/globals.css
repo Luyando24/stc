@@ -1,22 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Brand Colors ──────────────────────────────────── */
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-200: #bfdbfe;
-  --color-brand-300: #93c5fd;
-  --color-brand-400: #60a5fa;
-  --color-brand-500: #2563eb;
-  --color-brand-600: #1d4ed8;
-  --color-brand-700: #1e40af;
-  --color-brand-800: #1e3a8a;
-  --color-brand-900: #172554;
-  --color-brand-950: #0f172a;
+  /* ── Brand Colors (Red / Navy Theme) ────────────────── */
+  --color-brand-50: #f0f7ff;
+  --color-brand-100: #e0efff;
+  --color-brand-200: #bde0ff;
+  --color-brand-300: #66b2ff;
+  --color-brand-400: #0080ff;
+  --color-brand-500: #0066cc;
+  --color-brand-600: #003366; /* Deep Navy (stc-logistics.com --primary) */
+  --color-brand-650: #d91a3c; /* Crimson Red (stc-logistics.com --secondary) */
+  --color-brand-700: #00264d;
+  --color-brand-800: #001f3f;
+  --color-brand-900: #001426;
+  --color-brand-950: #000d1a;
 
-  --color-accent-400: #fb923c;
-  --color-accent-500: #f97316;
-  --color-accent-600: #ea6c0a;
+  --color-accent-400: #e65c75;
+  --color-accent-500: #d91a3c; /* Crimson Red */
+  --color-accent-600: #a6142e;
 
   /* ── Surface tokens ────────────────────────────────── */
   --color-surface-50: #f8fafc;
@@ -101,7 +102,7 @@
     gap: 0.5rem;
     padding: 0.625rem 1.25rem;
     border-radius: 0.75rem;
-    background-color: var(--color-brand-600);
+    background-color: var(--color-brand-650);
     color: #fff;
     font-weight: 600;
     font-size: 0.875rem;
@@ -112,7 +113,7 @@
   }
 
   .btn-primary:hover {
-    background-color: var(--color-brand-700);
+    background-color: var(--color-accent-600);
   }
 
   .btn-primary:disabled {

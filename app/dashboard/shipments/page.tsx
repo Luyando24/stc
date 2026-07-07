@@ -54,7 +54,7 @@ export default async function ShipmentsPage() {
                 </div>
                 <div className="border-t border-slate-100 mt-2 pt-2 flex justify-between items-center text-xs text-slate-400">
                   <span>Created</span>
-                  <span>{new Date(s.created_at).toLocaleDateString()}</span>
+                  <span>{new Date(s.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                 </div>
               </Link>
             ))}
@@ -84,7 +84,7 @@ export default async function ShipmentsPage() {
                         <span className={`badge-${s.status}`}>{s.status.replace(/_/g, " ")}</span>
                       </td>
                       <td className="px-4 py-3 text-slate-500 hidden lg:table-cell text-xs">
-                        {new Date(s.created_at).toLocaleDateString()}
+                        {new Date(s.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </td>
                       <td className="px-4 py-3">
                         <Link href={`/dashboard/shipments/${s.id}`} className="text-brand-600 hover:text-brand-700 text-xs font-medium">

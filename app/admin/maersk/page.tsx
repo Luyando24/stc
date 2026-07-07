@@ -326,7 +326,7 @@ export default function AdminMaerskBookingsPage() {
                         </td>
                         <td className="px-4 py-3 text-slate-700">{b.destination_country}</td>
                         <td className="px-4 py-3 text-slate-500 text-xs">
-                          {b.estimated_delivery_date ? new Date(b.estimated_delivery_date).toLocaleDateString() : "—"}
+                          {b.estimated_delivery_date ? new Date(b.estimated_delivery_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <button

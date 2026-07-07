@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Loader2, Package2, ArrowLeft } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { Search, Loader2, Package2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import TrackingTimeline from "@/components/tracking/TrackingTimeline";
 import { ShipmentStatus } from "@/lib/types";
@@ -29,33 +30,53 @@ interface TrackingResult {
   source: "cache" | "live" | "manual";
 }
 
-export default function TrackPage() {
+function TrackPageContent() {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrackingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleTrack(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = query.trim().toUpperCase();
+  async function triggerTrack(trackingCode: string) {
+    const trimmed = trackingCode.trim().toUpperCase();
     if (!trimmed) return;
 
     setLoading(true);
     setError(null);
     setResult(null);
 
-    const res = await fetch(`/api/track/${encodeURIComponent(trimmed)}`);
-    const json = await res.json();
+    try {
+      const res = await fetch(`/api/track/${encodeURIComponent(trimmed)}`);
+      const json = await res.json();
 
-    if (!res.ok) {
-      setError(json.error ?? "Tracking number not found. Please check and try again.");
+      if (!res.ok) {
+        setError(json.error ?? "Tracking number not found. Please check and try again.");
+        setLoading(false);
+        return;
+      }
+
+      setResult(json);
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred while fetching tracking details.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setResult(json);
-    setLoading(false);
   }
+
+  async function handleTrack(e: React.FormEvent) {
+    e.preventDefault();
+    await triggerTrack(query);
+  }
+
+  // Auto-run search if 'q' search param is present
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) {
+      setQuery(q);
+      triggerTrack(q);
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -82,7 +103,7 @@ export default function TrackPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="input pl-12 text-base h-14 font-mono"
-                  placeholder="STC-SH-2026-000001"
+                  placeholder="e.g. STC23586765"
                   autoCapitalize="characters"
                   autoCorrect="off"
                 />
@@ -136,7 +157,7 @@ export default function TrackPage() {
                     <span>
                       ETA:{" "}
                       <span className="text-slate-900">
-                        {new Date(result.shipment.estimated_delivery_date).toLocaleDateString()}
+                        {new Date(result.shipment.estimated_delivery_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
                     </span>
                   )}
@@ -170,5 +191,17 @@ export default function TrackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TrackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+      </div>
+    }>
+      <TrackPageContent />
+    </Suspense>
   );
 }

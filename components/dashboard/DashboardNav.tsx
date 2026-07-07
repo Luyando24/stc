@@ -8,17 +8,12 @@ import {
   LayoutDashboard,
   Package,
   Plane,
-  Bell,
-  Settings,
+  Building,
+  MapPin,
+  CheckCircle,
   LogOut,
   Menu,
   X,
-  Plus,
-  MapPin,
-  Building,
-  Map,
-  ClipboardList,
-  CheckCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Profile } from "@/lib/types";

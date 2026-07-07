@@ -160,7 +160,11 @@ export default function TrackingTimeline({ events, shipmentStatus }: TrackingTim
                         {event.event_datetime && (
                           <>
                             <p className="text-xs text-slate-500">
-                              {new Date(event.event_datetime).toLocaleDateString()}
+                              {new Date(event.event_datetime).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
                             </p>
                             <p className="text-xs text-slate-400">
                               {new Date(event.event_datetime).toLocaleTimeString([], {

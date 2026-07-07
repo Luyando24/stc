@@ -77,7 +77,7 @@ export default async function ShipmentDetailPage({
             <div className="flex items-center gap-2 text-slate-500">
               <Calendar className="w-4 h-4 text-slate-500" />
               <span className="text-slate-800">
-                {new Date(shipment.estimated_delivery_date).toLocaleDateString()}
+                {new Date(shipment.estimated_delivery_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </span>
             </div>
           )}
