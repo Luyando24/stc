@@ -41,17 +41,18 @@ export async function PATCH(
   }
 
   // Update
-  const { error: updateError } = await supabase
+  const { data: updatedData, error: updateError } = await supabase
     .from("parcels")
     .update({
       item_description,
       quantity,
       declared_value,
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select();
 
-  if (updateError) {
-    return NextResponse.json({ error: "Failed to update parcel details." }, { status: 500 });
+  if (updateError || !updatedData || updatedData.length === 0) {
+    return NextResponse.json({ error: "Failed to update parcel details. Make sure you own this parcel and its status allows updates." }, { status: 400 });
   }
 
   return NextResponse.json({ success: true });

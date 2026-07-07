@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -16,9 +16,35 @@ import {
 } from "lucide-react";
 import SiteNav from "@/components/SiteNav";
 import FloatingWidget from "@/components/FloatingWidget";
+import { createClient } from "@/lib/supabase/client";
 
 export default function HomePage() {
   const [trackingNo, setTrackingNo] = useState("");
+  const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  useEffect(() => {
+    async function loadLatestPosts() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("blog_posts")
+          .select("title, slug, excerpt, category, published_date, read_time")
+          .lte("published_date", new Date().toISOString())
+          .order("published_date", { ascending: false })
+          .limit(3);
+        
+        if (!error && data) {
+          setLatestPosts(data);
+        }
+      } catch (err) {
+        console.error("Error loading latest posts:", err);
+      } finally {
+        setLoadingPosts(false);
+      }
+    }
+    loadLatestPosts();
+  }, []);
 
   const handleQuickTrack = (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,6 +221,79 @@ export default function HomePage() {
               })}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Latest Blog Posts Section ── */}
+      <section className="py-24 bg-white border-t border-slate-200">
+        <div className="page-container">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
+            <div>
+              <h2 className="text-3xl font-display font-black text-brand-600 tracking-tight">
+                Latest News &amp; Shipping Advice
+              </h2>
+              <p className="text-slate-500 text-sm mt-2 max-w-xl">
+                Stay updated with the latest cargo guidelines, warehouse notices, and importation tips from China.
+              </p>
+            </div>
+            <Link
+              href="/news"
+              className="text-sm font-bold text-brand-650 hover:text-accent-600 inline-flex items-center gap-1 shrink-0 transition-colors"
+            >
+              View All Articles <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {loadingPosts ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-[#f4f5f6] border border-slate-100 rounded-3xl p-6 h-64 animate-pulse flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="w-20 h-4 bg-slate-200 rounded" />
+                    <div className="w-full h-6 bg-slate-200 rounded" />
+                    <div className="w-3/4 h-6 bg-slate-200 rounded" />
+                  </div>
+                  <div className="w-24 h-4 bg-slate-200 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : latestPosts.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 text-sm border border-dashed border-slate-200 rounded-3xl bg-[#f4f5f6]">
+              No articles posted yet. Stay tuned for future insights!
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {latestPosts.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/news/${post.slug}`}
+                  className="group flex flex-col justify-between bg-[#f4f5f6] border border-slate-100 hover:border-slate-200 rounded-3xl p-6 hover:shadow-lg transition-all duration-300 h-full"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                      <span className="bg-brand-50 text-brand-650 border border-brand-100 px-2.5 py-0.5 rounded">
+                        {post.category}
+                      </span>
+                      <span>•</span>
+                      <span>{post.read_time} min read</span>
+                    </div>
+
+                    <h3 className="text-lg font-display font-black text-slate-900 group-hover:text-brand-650 transition-colors line-clamp-2 leading-snug">
+                      {post.title}
+                    </h3>
+
+                    <p className="text-slate-500 text-xs leading-relaxed line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 mt-6 text-brand-650 font-bold text-xs uppercase group-hover:translate-x-1 transition-transform">
+                    Read Article <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

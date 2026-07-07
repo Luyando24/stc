@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           error: "Failed to send test email",
           details: result.error || result.warning,
-        }, { status: 500 });
+        }, { status: 400 });
       }
 
       return NextResponse.json({ success: true, message: `Test email sent successfully to ${test_recipient}` });

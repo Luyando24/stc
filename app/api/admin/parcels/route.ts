@@ -75,7 +75,11 @@ export async function POST(request: Request) {
       await notifyParcelArrived(
         authUser.user.email,
         customer.full_name ?? "",
-        local_tracking_number
+        local_tracking_number,
+        parcel.id,
+        weight_kg || null,
+        dimensions || null,
+        supplier_name || null
       );
     }
   } catch (notifyErr) {

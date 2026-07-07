@@ -87,7 +87,17 @@ export default function EmailSettingsPage() {
       if (res.ok) {
         setTestStatus({ success: true, message: data.message });
       } else {
-        setTestStatus({ success: false, message: data.error || "Failed to send test email" });
+        let errMsg = data.error || "Failed to send test email";
+        if (data.details && typeof data.details === "object") {
+          if (data.details.message) {
+            errMsg = `${errMsg}: ${data.details.message}`;
+          } else if (typeof data.details === "string") {
+            errMsg = `${errMsg}: ${data.details}`;
+          }
+        } else if (data.details && typeof data.details === "string") {
+          errMsg = `${errMsg}: ${data.details}`;
+        }
+        setTestStatus({ success: false, message: errMsg });
       }
     } catch (err) {
       setTestStatus({ success: false, message: "An unexpected error occurred." });
