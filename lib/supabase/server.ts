@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 export async function createClient() {
@@ -28,8 +29,7 @@ export async function createClient() {
 
 /** Service-role client — server-side only, bypasses RLS */
 export function createServiceClient() {
-  const { createClient } = require("@supabase/supabase-js");
-  return createClient(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
     process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-service-role-key"
   );

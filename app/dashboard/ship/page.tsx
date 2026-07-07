@@ -31,6 +31,7 @@ export default function ShipNowPage() {
           .select("*")
           .eq("customer_id", user.id)
           .eq("status", "arrived")
+          .is("submitted_for_shipping", false)
           .order("arrived_at", { ascending: false }),
         supabase
           .from("receiver_addresses")
@@ -76,24 +77,24 @@ export default function ShipNowPage() {
     setLoading(true);
     setError(null);
 
-    const res = await fetch("/api/shipments", {
+    const res = await fetch("/api/parcels/batch-submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         parcel_ids: selectedParcels,
-        mode,
+        shipping_mode: mode,
         receiver_address_id: selectedAddressId,
       }),
     });
 
     const json = await res.json();
     if (!res.ok) {
-      setError(json.error ?? "Failed to create shipment.");
+      setError(json.error ?? "Failed to submit parcels for shipping.");
       setLoading(false);
       return;
     }
 
-    router.push(`/dashboard/shipments/${json.shipment_id}`);
+    router.push("/dashboard/parcels");
   }
 
   if (fetching) {
@@ -107,9 +108,9 @@ export default function ShipNowPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-slate-900">Ship Now</h1>
+        <h1 className="text-2xl font-display font-bold text-slate-900">Submit Parcels for Shipping</h1>
         <p className="text-slate-500 text-sm mt-1">
-          Select arrived parcels to ship to your delivery address.
+          Select arrived parcels to submit for international shipping.
         </p>
       </div>
 
@@ -299,9 +300,9 @@ export default function ShipNowPage() {
           className="btn-primary w-full justify-center text-sm font-semibold rounded-xl py-2.5"
         >
           {loading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Processing shipment...</>
+            <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
           ) : (
-            <>Ship Now</>
+            <>Submit for Shipping</>
           )}
         </button>
       </form>
