@@ -147,12 +147,28 @@ export default async function AdminShipmentDetailPage({
           <h2 className="text-sm font-semibold text-slate-900 mb-4">Consolidated Parcels</h2>
           <div className="space-y-2">
             {parcelLinks.map((l) => {
-              const p = l.parcels as unknown as { id: string; local_tracking_number: string; item_description: string | null; quantity: number; weight_kg: number | null };
+              const p = l.parcels as unknown as {
+                id: string;
+                local_tracking_number: string;
+                item_description: string | null;
+                quantity: number;
+                weight_kg: number | null;
+                dimensions: string | null;
+                declared_value: number | null;
+              };
               return (
-                <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 text-sm">
-                  <span className="font-mono text-slate-900 flex-1">{p.local_tracking_number}</span>
-                  <span className="text-slate-500 text-xs">{p.item_description ?? "—"}</span>
-                  {p.weight_kg && <span className="text-slate-500 text-xs">{p.weight_kg}kg</span>}
+                <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 text-sm gap-4 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-mono text-slate-900 font-bold block">{p.local_tracking_number}</span>
+                    <span className="text-slate-500 text-xs block mt-0.5">
+                      {p.item_description ?? "—"} · Qty: {p.quantity}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500 text-right space-y-0.5 shrink-0">
+                    {p.weight_kg && <span className="block font-medium">Weight: {p.weight_kg}kg</span>}
+                    {p.dimensions && <span className="block">Dimensions: {p.dimensions}</span>}
+                    {p.declared_value && <span className="block">Value: ¥{p.declared_value}</span>}
+                  </div>
                 </div>
               );
             })}

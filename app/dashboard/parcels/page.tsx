@@ -24,7 +24,7 @@ export default async function ParcelsPage() {
   // Fetch shipments to check if any parcels are part of a delivered shipment
   const { data: shipments } = await supabase
     .from("shipments")
-    .select("id, status")
+    .select("id, status, stc_tracking_number")
     .eq("customer_id", user.id);
 
   // Fetch shipment-parcel links
@@ -32,28 +32,32 @@ export default async function ParcelsPage() {
     .from("shipment_parcels")
     .select("shipment_id, parcel_id");
 
-  // Create a map to quickly look up a parcel's corresponding shipment status
-  const parcelShipmentStatusMap = new Map<string, string>();
+  // Create a map to quickly look up a parcel's corresponding shipment status, id and tracking number
+  const parcelShipmentMap = new Map<string, { status: string; shipment_id: string; stc_tracking_number: string }>();
   if (links && shipments) {
-    const shipmentStatusMap = new Map(shipments.map((s) => [s.id, s.status]));
+    const shipmentMap = new Map(
+      shipments.map((s) => [
+        s.id,
+        { status: s.status, shipment_id: s.id, stc_tracking_number: s.stc_tracking_number },
+      ])
+    );
     links.forEach((link) => {
-      const status = shipmentStatusMap.get(link.shipment_id);
-      if (status) {
-        parcelShipmentStatusMap.set(link.parcel_id, status);
+      const sInfo = shipmentMap.get(link.shipment_id);
+      if (sInfo) {
+        parcelShipmentMap.set(link.parcel_id, sInfo);
       }
     });
   }
 
-  // Override status to "delivered" if the parcel is linked to a delivered shipment
+  // Override status to "delivered" if the parcel is linked to a delivered shipment, and add international tracking number + shipment ID
   const mappedParcels = (parcels || []).map((parcel) => {
-    const shipmentStatus = parcelShipmentStatusMap.get(parcel.id);
-    if (shipmentStatus === "delivered") {
-      return {
-        ...parcel,
-        status: "delivered" as const,
-      };
-    }
-    return parcel;
+    const sInfo = parcelShipmentMap.get(parcel.id);
+    return {
+      ...parcel,
+      status: sInfo?.status === "delivered" ? ("delivered" as const) : parcel.status,
+      stc_tracking_number: sInfo?.stc_tracking_number || null,
+      shipment_id: sInfo?.shipment_id || null,
+    };
   });
 
   return (

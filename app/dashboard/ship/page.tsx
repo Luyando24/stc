@@ -55,9 +55,10 @@ export default function ShipNowPage() {
     loadData();
   }, [router, supabase]);
 
-  function toggleParcel(id: string) {
+  function toggleParcel(parcel: Parcel) {
+    if (!parcel.item_description || !parcel.declared_value) return;
     setSelectedParcels((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+      prev.includes(parcel.id) ? prev.filter((p) => p !== parcel.id) : [...prev, parcel.id]
     );
   }
 
@@ -130,32 +131,56 @@ export default function ShipNowPage() {
             <div className="space-y-2">
               {arrivedParcels.map((parcel) => {
                 const selected = selectedParcels.includes(parcel.id);
+                const isMissingDetails = !parcel.item_description || !parcel.declared_value;
                 return (
-                  <button
+                  <div
                     key={parcel.id}
-                    type="button"
-                    onClick={() => toggleParcel(parcel.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                      selected
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                      isMissingDetails
+                        ? "border-slate-100 bg-slate-50/50 opacity-70"
+                        : selected
                         ? "border-brand-500/50 bg-brand-50"
                         : "border-slate-200 bg-white hover:bg-slate-50"
                     }`}
                   >
-                    {selected ? (
-                      <CheckSquare className="w-4 h-4 text-brand-600 flex-shrink-0" />
+                    {!isMissingDetails ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleParcel(parcel)}
+                        className="p-1 rounded hover:bg-slate-100 shrink-0"
+                      >
+                        {selected ? (
+                          <CheckSquare className="w-4 h-4 text-brand-600 flex-shrink-0" />
+                        ) : (
+                          <Square className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        )}
+                      </button>
                     ) : (
-                      <Square className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <div className="p-1 shrink-0 text-red-500" title="Missing details">
+                        <AlertCircle className="w-4 h-4" />
+                      </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-mono text-slate-900">{parcel.local_tracking_number}</p>
                       <p className="text-xs text-slate-500 truncate">
-                        {parcel.item_description ?? "No description"} · Qty: {parcel.quantity}
+                        {parcel.item_description ?? "No description (details missing)"} · Qty: {parcel.quantity}
                       </p>
+                      {isMissingDetails && (
+                        <p className="text-[11px] text-red-600 mt-1 font-semibold flex items-center gap-1.5">
+                          <span>Please fill item details first:</span>
+                          <Link
+                            href={`/dashboard/parcels/${parcel.id}`}
+                            className="underline font-bold text-blue-600 hover:text-blue-700"
+                          >
+                            Fill details →
+                          </Link>
+                        </p>
+                      )}
                     </div>
                     {parcel.weight_kg && (
-                      <span className="text-xs text-slate-500">{parcel.weight_kg}kg</span>
+                      <span className="text-xs text-slate-550">{parcel.weight_kg}kg</span>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>

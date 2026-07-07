@@ -14,6 +14,8 @@ export type ClientParcelStatus = ParcelStatus | "delivered";
 
 export interface ClientParcel extends Omit<Parcel, "status"> {
   status: ClientParcelStatus;
+  stc_tracking_number: string | null;
+  shipment_id: string | null;
 }
 
 interface MyParcelsClientProps {
@@ -175,7 +177,7 @@ export default function MyParcelsClient({ parcels, profileCountry }: MyParcelsCl
               {/* Middle Section: Tracking Codes & Descriptions */}
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
                 <div className="space-y-1">
-                  <p className="text-slate-400 font-medium">Tracking Number</p>
+                  <p className="text-slate-400 font-medium">Local bill number</p>
                   <div className="flex items-center gap-1.5">
                     <span className="font-mono font-bold text-slate-800 text-sm">
                       {parcel.local_tracking_number}
@@ -183,7 +185,7 @@ export default function MyParcelsClient({ parcels, profileCountry }: MyParcelsCl
                     <button
                       onClick={() => handleCopy(parcel.id, parcel.local_tracking_number)}
                       className="text-slate-400 hover:text-brand-650 p-0.5 rounded transition-colors"
-                      title="Copy tracking number"
+                      title="Copy local bill number"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
@@ -196,9 +198,9 @@ export default function MyParcelsClient({ parcels, profileCountry }: MyParcelsCl
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-slate-400 font-medium">Supplier</p>
-                  <p className="font-sans text-slate-700 font-semibold text-sm">
-                    {parcel.supplier_name ?? "—"}
+                  <p className="text-slate-400 font-medium">Tracking Number</p>
+                  <p className="font-mono text-slate-700 font-semibold text-sm">
+                    {parcel.stc_tracking_number ?? "—"}
                   </p>
                 </div>
 
@@ -234,12 +236,21 @@ export default function MyParcelsClient({ parcels, profileCountry }: MyParcelsCl
                 </div>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Link
-                    href={`/dashboard/parcels/${parcel.id}`}
-                    className="bg-brand-650 hover:bg-accent-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-colors text-center w-full sm:w-28"
-                  >
-                    {!parcel.item_description ? "Fill Details" : "Edit Details"}
-                  </Link>
+                  {parcel.stc_tracking_number ? (
+                    <Link
+                      href={`/dashboard/shipments/${parcel.shipment_id}`}
+                      className="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-colors text-center w-full sm:w-28"
+                    >
+                      Track
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/dashboard/parcels/${parcel.id}`}
+                      className="bg-brand-650 hover:bg-accent-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-colors text-center w-full sm:w-28"
+                    >
+                      {!parcel.item_description ? "Fill Details" : "Edit Details"}
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

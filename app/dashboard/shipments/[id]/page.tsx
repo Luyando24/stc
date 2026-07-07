@@ -39,7 +39,15 @@ export default async function ShipmentDetailPage({
     .select("parcel_id, parcels(*)")
     .eq("shipment_id", id);
 
-  type ParcelSummary = { id: string; local_tracking_number: string; item_description: string | null; quantity: number };
+  type ParcelSummary = {
+    id: string;
+    local_tracking_number: string;
+    item_description: string | null;
+    quantity: number;
+    weight_kg: number | null;
+    dimensions: string | null;
+    declared_value: number | null;
+  };
   const parcels = (parcelLinks?.map((l: { parcels: unknown }) => l.parcels as ParcelSummary) ?? []) as ParcelSummary[];
 
   return (
@@ -115,10 +123,17 @@ export default async function ShipmentDetailPage({
           </h2>
           <div className="space-y-2">
             {parcels.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-mono text-slate-900">{p.local_tracking_number}</p>
-                  <p className="text-xs text-slate-500">{p.item_description ?? "No description"} · Qty {p.quantity}</p>
+              <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 gap-4 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-mono text-slate-900 font-bold">{p.local_tracking_number}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {p.item_description ?? "No description"} · Qty: {p.quantity}
+                  </p>
+                </div>
+                <div className="text-xs text-slate-500 text-right space-y-0.5 shrink-0">
+                  {p.weight_kg && <span className="block font-medium">Weight: {p.weight_kg}kg</span>}
+                  {p.dimensions && <span className="block">Dimensions: {p.dimensions}</span>}
+                  {p.declared_value && <span className="block">Value: ¥{p.declared_value}</span>}
                 </div>
               </div>
             ))}

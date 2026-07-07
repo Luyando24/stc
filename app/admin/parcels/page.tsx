@@ -93,7 +93,7 @@ export default async function AdminParcelsPage({
                 </div>
                 <span className={`badge-${parcel.status}`}>{parcel.status}</span>
               </div>
-              <div className="text-sm text-slate-700 mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="text-sm text-slate-700 mb-3 grid grid-cols-2 sm:grid-cols-6 gap-2">
                 <div>
                   <span className="text-slate-500 text-xs">Supplier</span>
                   <p className="font-medium text-slate-800">{parcel.supplier_name ?? "—"}</p>
@@ -108,7 +108,15 @@ export default async function AdminParcelsPage({
                 </div>
                 <div>
                   <span className="text-slate-500 text-xs">Value</span>
-                  <p className="font-medium text-slate-800">{parcel.declared_value ? `$${parcel.declared_value}` : "—"}</p>
+                  <p className="font-medium text-slate-800">{parcel.declared_value ? `¥${parcel.declared_value}` : "—"}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500 text-xs">Weight</span>
+                  <p className="font-medium text-slate-800">{parcel.weight_kg ? `${parcel.weight_kg} kg` : "—"}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500 text-xs">Dimensions</span>
+                  <p className="font-medium text-slate-800">{parcel.dimensions ?? "—"}</p>
                 </div>
               </div>
               {parcel.status === "pending" && (
