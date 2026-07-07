@@ -28,7 +28,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-100 flex">
       <Suspense fallback={
         <aside className="hidden lg:flex flex-col w-60 fixed inset-y-0 left-0 bg-slate-50 border-r border-slate-200 z-30 p-4">
           <div className="w-32 h-6 bg-slate-200 rounded animate-pulse mb-8" />

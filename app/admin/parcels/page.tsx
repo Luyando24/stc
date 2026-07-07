@@ -36,10 +36,15 @@ export default async function AdminParcelsPage({
       // AND show newly added parcels without product info (status = 'arrived' but hasDetails is false)
       return parcel.status === "pending" || (parcel.status === "arrived" && !hasDetails);
     }
+
+    if (status === "filled") {
+      // Show arrived parcels with details but NOT submitted for shipping
+      return parcel.status === "arrived" && hasDetails && !parcel.submitted_for_shipping;
+    }
     
     if (status === "arrived") {
-      // Show arrived parcels that have been filed by the customer (hasDetails is true)
-      return parcel.status === "arrived" && hasDetails;
+      // Show arrived parcels that have been submitted for shipping (Ready to Ship)
+      return parcel.status === "arrived" && hasDetails && parcel.submitted_for_shipping;
     }
 
     if (status && status !== "all") {
@@ -52,6 +57,7 @@ export default async function AdminParcelsPage({
   const tabConfig = [
     { id: "all", label: "All" },
     { id: "pending", label: "Pending" },
+    { id: "filled", label: "Filled" },
     { id: "arrived", label: "Ready to Ship" },
     { id: "flagged", label: "Flagged" },
     { id: "consolidated", label: "Consolidated" },
@@ -123,6 +129,8 @@ export default async function AdminParcelsPage({
                 <span className={`badge-${parcel.status}`}>
                   {parcel.status === "arrived" && (!parcel.item_description || parcel.item_description.trim() === "" || parcel.declared_value === null || parcel.declared_value === undefined)
                     ? "arrived (pending info)"
+                    : parcel.status === "arrived" && !parcel.submitted_for_shipping
+                    ? "filled (unsubmitted)"
                     : parcel.status === "arrived"
                     ? "ready to ship"
                     : parcel.status}

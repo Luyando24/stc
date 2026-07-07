@@ -49,6 +49,13 @@ export default async function ParcelsPage() {
     });
   }
 
+  // Fetch customer's receiver addresses
+  const { data: receiverAddresses } = await supabase
+    .from("receiver_addresses")
+    .select("*")
+    .eq("customer_id", user.id)
+    .order("created_at", { ascending: false });
+
   // Override status to "delivered" if the parcel is linked to a delivered shipment, and add international tracking number + shipment ID
   const mappedParcels = (parcels || []).map((parcel) => {
     const sInfo = parcelShipmentMap.get(parcel.id);
@@ -64,6 +71,7 @@ export default async function ParcelsPage() {
     <MyParcelsClient
       parcels={mappedParcels}
       profileCountry={profile?.country || "LUSAKA"}
+      receiverAddresses={receiverAddresses || []}
     />
   );
 }

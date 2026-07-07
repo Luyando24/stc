@@ -34,11 +34,12 @@ function AdminNewShipmentForm() {
   const [selectedBookingId, setSelectedBookingId] = useState("");
 
   useEffect(() => {
-    // Fetch arrived parcels
+    // Fetch arrived parcels (only those submitted for shipping by the customer)
     supabase
       .from("parcels")
       .select("*, profiles(full_name, warehouse_code, country)")
       .eq("status", "arrived")
+      .eq("submitted_for_shipping", true)
       .order("arrived_at", { ascending: false })
       .then(({ data }) => {
         const fetched = (data as typeof arrivedParcels) ?? [];
