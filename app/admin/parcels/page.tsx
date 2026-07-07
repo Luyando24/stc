@@ -15,18 +15,47 @@ export default async function AdminParcelsPage({
     .from("parcels")
     .select("*, profiles(full_name, warehouse_code)")
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(200);
 
-  if (status && status !== "all") {
-    query = query.eq("status", status);
-  }
   if (q) {
     query = query.ilike("local_tracking_number", `%${q}%`);
   }
 
-  const { data: parcels } = await query;
+  const { data: rawParcels } = await query;
 
-  const statuses = ["all", "pending", "arrived", "flagged", "consolidated"];
+  // Filter in memory according to the rules
+  const parcels = (rawParcels || []).filter((parcel) => {
+    const hasDetails =
+      parcel.item_description &&
+      parcel.item_description.trim() !== "" &&
+      parcel.declared_value !== null &&
+      parcel.declared_value !== undefined;
+
+    if (status === "pending") {
+      // Show pre-alert pending (status = 'pending')
+      // AND show newly added parcels without product info (status = 'arrived' but hasDetails is false)
+      return parcel.status === "pending" || (parcel.status === "arrived" && !hasDetails);
+    }
+    
+    if (status === "arrived") {
+      // Show arrived parcels that have been filed by the customer (hasDetails is true)
+      return parcel.status === "arrived" && hasDetails;
+    }
+
+    if (status && status !== "all") {
+      return parcel.status === status;
+    }
+
+    return true;
+  });
+
+  const tabConfig = [
+    { id: "all", label: "All" },
+    { id: "pending", label: "Pending" },
+    { id: "arrived", label: "Ready to Ship" },
+    { id: "flagged", label: "Flagged" },
+    { id: "consolidated", label: "Consolidated" },
+  ];
 
   return (
     <div>
@@ -44,17 +73,17 @@ export default async function AdminParcelsPage({
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
-        {statuses.map((s) => (
+        {tabConfig.map((tab) => (
           <Link
-            key={s}
-            href={`/admin/parcels${s !== "all" ? `?status=${s}` : ""}`}
+            key={tab.id}
+            href={`/admin/parcels${tab.id !== "all" ? `?status=${tab.id}` : ""}`}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-              (status ?? "all") === s
+              (status ?? "all") === tab.id
                 ? "bg-brand-50 text-brand-600 border-brand-200"
                 : "text-slate-500 hover:text-slate-900 border-transparent hover:bg-slate-50"
             }`}
           >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
+            {tab.label}
           </Link>
         ))}
       </div>
@@ -91,7 +120,13 @@ export default async function AdminParcelsPage({
                     </span>
                   </p>
                 </div>
-                <span className={`badge-${parcel.status}`}>{parcel.status}</span>
+                <span className={`badge-${parcel.status}`}>
+                  {parcel.status === "arrived" && (!parcel.item_description || parcel.item_description.trim() === "" || parcel.declared_value === null || parcel.declared_value === undefined)
+                    ? "arrived (pending info)"
+                    : parcel.status === "arrived"
+                    ? "ready to ship"
+                    : parcel.status}
+                </span>
               </div>
               <div className="text-sm text-slate-700 mb-3 grid grid-cols-2 sm:grid-cols-6 gap-2">
                 <div>
