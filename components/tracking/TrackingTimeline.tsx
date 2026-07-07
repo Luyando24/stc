@@ -163,7 +163,7 @@ export default function TrackingTimeline({ events, shipmentStatus }: TrackingTim
                       <p
                         className={clsx(
                           "text-sm font-medium",
-                          isLatest ? "text-slate-900" : "text-slate-650"
+                          isLatest ? "text-brand-600" : "text-slate-650"
                         )}
                       >
                         {event.description ?? event.event_type ?? "Update"}
