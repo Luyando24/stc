@@ -78,10 +78,17 @@ async function getMaerskToken(): Promise<string> {
 export async function getMaerskEvents(
   refs: MaerskQueryParams
 ): Promise<MaerskEvent[]> {
-  const isMock =
-    refs.carrierBookingReference?.toUpperCase() === "MRSU2628116" ||
-    refs.transportDocumentReference?.toUpperCase() === "MRSU2628116" ||
-    refs.equipmentReference?.toUpperCase() === "MRSU2628116";
+  const refStr = (
+    refs.carrierBookingReference ||
+    refs.transportDocumentReference ||
+    refs.equipmentReference ||
+    ""
+  ).toUpperCase();
+
+  const isDev = process.env.NODE_ENV !== "production" || process.env.MAERSK_MOCK_FALLBACK === "true";
+
+  // Production-safe mock check: Only mock if it's the legacy test ID, explicitly prefixed with MOCK_, or running in local dev mode
+  const isMock = refStr === "MRSU2628116" || (refStr.startsWith("MOCK_") && refStr.substring(5).startsWith("MRSU")) || (isDev && refStr.startsWith("MRSU"));
 
   if (isMock) {
     return [
@@ -147,10 +154,7 @@ export async function getMaerskEvents(
     ];
   }
 
-  const isTiiuMock =
-    refs.carrierBookingReference?.toUpperCase() === "TIIU5323016" ||
-    refs.transportDocumentReference?.toUpperCase() === "TIIU5323016" ||
-    refs.equipmentReference?.toUpperCase() === "TIIU5323016";
+  const isTiiuMock = refStr === "TIIU5323016" || (refStr.startsWith("MOCK_") && refStr.substring(5).startsWith("TIIU")) || (isDev && refStr.startsWith("TIIU"));
 
   if (isTiiuMock) {
     return [
