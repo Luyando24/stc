@@ -1,7 +1,14 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { getMaerskEvents } from "./maersk";
+import { getMaerskEvents, MaerskApiError } from "./maersk";
 
 const CACHE_TTL_MINUTES = 30;
+
+export type ShipmentSyncResult =
+  | { status: "skipped" }
+  | { status: "cache" }
+  | { status: "synced"; eventCount: number }
+  | { status: "not_found_or_unauthorized"; message: string }
+  | { status: "error"; message: string };
 
 /**
  * Generates a unique STC tracking number in the format: STC + 8 random digits (e.g. STC23586765).
@@ -86,13 +93,13 @@ export async function syncShipmentEvents(
     maersk_equipment_reference: string | null;
   },
   force = false
-): Promise<void> {
+): Promise<ShipmentSyncResult> {
   const hasMaerskRef =
     shipment.maersk_transport_document_reference ||
     shipment.maersk_carrier_booking_reference ||
     shipment.maersk_equipment_reference;
 
-  if (!hasMaerskRef) return;
+  if (!hasMaerskRef) return { status: "skipped" };
 
   // Check cache freshness
   const { data: cachedEvents } = await supabase
@@ -107,6 +114,10 @@ export async function syncShipmentEvents(
   const cacheAge = newest
     ? (Date.now() - new Date(newest.created_at).getTime()) / 60000
     : Infinity;
+
+  if (!force && cacheAge < CACHE_TTL_MINUTES) {
+    return { status: "cache" };
+  }
 
   if (force || cacheAge >= CACHE_TTL_MINUTES) {
     try {
@@ -185,8 +196,18 @@ export async function syncShipmentEvents(
           }
         }
       }
+      return { status: "synced", eventCount: maerskEvents.length };
     } catch (err) {
       console.error("Maersk API sync error in utility:", err);
+      if (err instanceof MaerskApiError && err.code === "not_found_or_unauthorized") {
+        return { status: "not_found_or_unauthorized", message: err.message };
+      }
+      return {
+        status: "error",
+        message: err instanceof Error ? err.message : "Unknown Maersk sync error",
+      };
     }
   }
+
+  return { status: "cache" };
 }

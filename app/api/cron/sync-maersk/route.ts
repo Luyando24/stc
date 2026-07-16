@@ -38,8 +38,13 @@ export async function GET(request: NextRequest) {
   for (const shipment of shipments ?? []) {
     try {
       // Force sync to bypass the cache age check during scheduled cron execution
-      await syncShipmentEvents(supabase, shipment, true);
-      results.updated++;
+      const syncResult = await syncShipmentEvents(supabase, shipment, true);
+      if (syncResult.status === "synced") {
+        results.updated++;
+      } else if (syncResult.status === "error" || syncResult.status === "not_found_or_unauthorized") {
+        console.error(`Cron: failed to sync shipment ${shipment.stc_tracking_number}: ${syncResult.message}`);
+        results.failed++;
+      }
     } catch (err) {
       console.error(`Cron: failed to sync shipment ${shipment.stc_tracking_number}:`, err);
       results.failed++;
@@ -49,4 +54,3 @@ export async function GET(request: NextRequest) {
   console.log("Maersk cron sync complete:", results);
   return NextResponse.json({ ok: true, ...results });
 }
-

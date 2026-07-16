@@ -35,6 +35,17 @@ interface MaerskQueryParams {
   equipmentReference?: string | null;
 }
 
+export class MaerskApiError extends Error {
+  constructor(
+    message: string,
+    public readonly code: "not_found_or_unauthorized" | "request_failed",
+    public readonly status: number
+  ) {
+    super(message);
+    this.name = "MaerskApiError";
+  }
+}
+
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getMaerskToken(): Promise<string> {
@@ -85,10 +96,8 @@ export async function getMaerskEvents(
     ""
   ).toUpperCase();
 
-  const isDev = process.env.NODE_ENV !== "production" || process.env.MAERSK_MOCK_FALLBACK === "true";
-
-  // Production-safe mock check: Only mock if it's the legacy test ID, explicitly prefixed with MOCK_, or running in local dev mode
-  const isMock = refStr === "MRSU2628116" || (refStr.startsWith("MOCK_") && refStr.substring(5).startsWith("MRSU")) || (isDev && refStr.startsWith("MRSU"));
+  // Mocks must be explicit. Real references reach Maersk in every environment.
+  const isMock = refStr === "MRSU2628116" || (refStr.startsWith("MOCK_") && refStr.substring(5).startsWith("MRSU"));
 
   if (isMock) {
     return [
@@ -154,7 +163,7 @@ export async function getMaerskEvents(
     ];
   }
 
-  const isTiiuMock = refStr === "TIIU5323016" || (refStr.startsWith("MOCK_") && refStr.substring(5).startsWith("TIIU")) || (isDev && refStr.startsWith("TIIU"));
+  const isTiiuMock = refStr === "TIIU5323016" || (refStr.startsWith("MOCK_") && refStr.substring(5).startsWith("TIIU"));
 
   if (isTiiuMock) {
     return [
@@ -215,12 +224,20 @@ export async function getMaerskEvents(
 
   if (res.status === 404) {
     // Shipment not found on Maersk for this Consumer Key — expected for non-STC bookings
-    return [];
+    throw new MaerskApiError(
+      "Maersk could not authorize this client for the shipment, or the reference was not found.",
+      "not_found_or_unauthorized",
+      res.status
+    );
   }
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Maersk events API error: ${res.status} — ${text}`);
+    throw new MaerskApiError(
+      `Maersk events API error: ${res.status} — ${text}`,
+      "request_failed",
+      res.status
+    );
   }
 
   const data = await res.json();

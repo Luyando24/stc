@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { syncShipmentEvents } from "@/lib/tracking-utils";
+import { syncShipmentEvents, ShipmentSyncResult } from "@/lib/tracking-utils";
 import { TrackingEvent } from "@/lib/types";
 
 export async function GET(
@@ -31,10 +31,11 @@ export async function GET(
 
   let events: TrackingEvent[] = [];
   let source: "cache" | "live" | "manual" = "manual";
+  let trackingSync: ShipmentSyncResult = { status: "skipped" };
 
   if (hasMaerskRef) {
-    await syncShipmentEvents(supabase, shipment);
-    source = "live";
+    trackingSync = await syncShipmentEvents(supabase, shipment);
+    source = trackingSync.status === "synced" ? "live" : "cache";
   }
 
   // Fetch all events (Maersk + manual) merged
@@ -44,7 +45,14 @@ export async function GET(
     .eq("shipment_id", shipment.id)
     .order("event_datetime", { ascending: false });
 
-  events = allEvents ?? [];
+  const liveRefreshReturnedNoData =
+    trackingSync.status === "not_found_or_unauthorized" ||
+    trackingSync.status === "error" ||
+    (trackingSync.status === "synced" && trackingSync.eventCount === 0);
+
+  // Never substitute cached or manual events when a live Maersk refresh
+  // explicitly failed or returned no events.
+  events = liveRefreshReturnedNoData ? [] : (allEvents ?? []);
 
   return NextResponse.json({
     shipment: {
@@ -56,5 +64,6 @@ export async function GET(
     },
     events,
     source,
+    tracking_sync: trackingSync,
   });
 }

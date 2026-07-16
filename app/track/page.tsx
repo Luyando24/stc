@@ -28,6 +28,10 @@ interface TrackingResult {
     created_at: string;
   }[];
   source: "cache" | "live" | "manual";
+  tracking_sync:
+    | { status: "skipped" | "cache" }
+    | { status: "synced"; eventCount: number }
+    | { status: "not_found_or_unauthorized" | "error"; message: string };
 }
 
 function TrackPageContent() {
@@ -132,6 +136,17 @@ function TrackPageContent() {
           {/* Result */}
           {result && (
             <div className="space-y-4 animate-in fade-in duration-300">
+              {(result.tracking_sync.status === "not_found_or_unauthorized" ||
+                result.tracking_sync.status === "error" ||
+                (result.tracking_sync.status === "synced" && result.tracking_sync.eventCount === 0)) && (
+                <div className="card p-4 border-amber-500/20 bg-amber-50 text-amber-800 text-sm">
+                  {result.tracking_sync.status === "not_found_or_unauthorized"
+                    ? "Live Maersk tracking is unavailable because this shipment reference was not found or is not authorized for our Maersk account."
+                    : result.tracking_sync.status === "error"
+                      ? "Live Maersk tracking could not be refreshed right now."
+                      : "Maersk returned no live tracking events for this shipment."}
+                </div>
+              )}
               {/* Shipment summary */}
               <div className="card p-5">
                 <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
